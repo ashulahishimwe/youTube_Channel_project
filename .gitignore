@@ -1,0 +1,3 @@
+Docs/*.json
+Notebooks/*Data.ipynb
+.env
