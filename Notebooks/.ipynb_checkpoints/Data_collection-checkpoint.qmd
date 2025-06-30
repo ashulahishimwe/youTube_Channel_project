@@ -1,0 +1,286 @@
+---
+title: Youtube Channel Insights - Exploratory and Descriptive of Data Collection
+jupyter: python3
+---
+
+
+## Project Goal Summary
+We’re analyzing a tech YouTube channel’s videos and comments using **YouTube Data API v3** to:
+
+- Collect and clean data
+
+- Analyze publishing and engagement trends
+
+- Do basic sentiment analysis
+
+- Visualize everything
+
+- Give final insights
+
+
+## Setup API Access
+Let’s start here.
+
+1. Create a Google Cloud Project: Go to https://console.cloud.google.com
+2. Enable YouTube Data API v3
+3. Get an API Key
+
+## Get Channel ID
+We’ll use the API to find Lex Fridman’s `channelId`.
+
+- `from googleapiclient.discovery import build`:  To connect to YouTube Data API using Python.
+
+- `from dotenv import load_dotenv`:  To securely load the API key from a `.env` file.
+
+- `import os` + `os.getenv("API_KEY")`:  
+  To access the API key stored in environment variables (not hard-coded).
+
+This keeps your API key private and secure while allowing authorized access to YouTube data.
+
+```{python}
+from googleapiclient.discovery import build
+```
+
+```{python}
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+api_key = os.getenv("API_KEY")
+```
+
+
+```{python}
+# Create a YouTube API client
+youtube = build('youtube', 'v3', developerKey=api_key)
+
+# Search for the channel by name
+request = youtube.search().list(
+    q='Lex Fridman',
+    type='channel',
+    part='snippet',
+    maxResults=1
+)
+response = request.execute()
+
+# Get the channel ID
+channel_id = response['items'][0]['snippet']['channelId']
+print("Channel ID:", channel_id)
+```
+
+## Fetch All Videos From Past 2 Years
+Now let’s get all video metadata (video ID, title, views, likes, comments, etc.) published in the last 2 years.
+
+### Import Required Libraries
+
+- `import pandas as pd`: To store, clean, and analyze tabular data (like CSV files) efficiently.
+
+- `import time`: To add delays (`time.sleep()`) between API requests and avoid rate limits.
+
+- `from datetime import datetime, timedelta, timezone`: To work with video dates — like filtering videos from the past 2 years.
+
+- `import os`: To access environment variables (like your API key) stored on your system.
+
+Together, these libraries help collect and prepare YouTube data in a clean, safe, and efficient way.
+
+```{python}
+# Import libraries
+import pandas as pd
+import time
+from datetime import datetime, timedelta, timezone
+import os
+```
+
+### Define and Create Directory Paths
+
+To ensure reproducibility and organized storage, we programmatically create directories if they don't already exist for:
+
+- **raw data**
+- **processed data**
+- **results**
+- **documentation**
+
+These directories will store intermediate and final outputs for reproducibility.
+
+```{python}
+#Get working directory
+current_dir = os.getcwd()
+#go one directory up to root directory
+project_root_dir = os.path.dirname(current_dir)
+#Define path to data files
+data_dir = os.path.join(project_root_dir, 'data')
+raw_dir = os.path.join(data_dir, 'raw')
+processed_dir = os.path.join(data_dir, 'processed')
+#Define path to results folder
+results_dir = os.path.join(project_root_dir, 'results')
+#Define path to results folder
+docs_dir = os.path.join(project_root_dir, 'docs')
+
+#Create directories if they do not exist
+os.makedirs(raw_dir, exist_ok=True)
+os.makedirs(processed_dir, exist_ok=True)
+os.makedirs(results_dir, exist_ok=True)
+os.makedirs(docs_dir, exist_ok=True)
+```
+
+### Set Up Time Range (Last 2 Years) 
+
+In this step, we connect to the YouTube Data API to retrieve metadata for all videos posted by the channel in the past 2 years.  
+We collect useful details, such as `videoId`, `title`, `publishedAt`, `viewCount`, `likeCount`, `commentCount`, `tags`, and `description`.
+
+This metadata will be the foundation for our analysis and visualizations.
+
+```{python}
+# Today's date and 2 years back
+today = datetime.now(timezone.utc).isoformat()
+two_years_ago = (datetime.now(timezone.utc) - timedelta(days=730)).isoformat()
+```
+
+## Fetch Videos Metadata
+
+### Collect Video Metadata (with Pagination)
+
+We use the YouTube Data API to collect metadata for all videos from the specified channel (Lex Fridman) posted in the last two years.
+
+This loop handles:
+- Sending paginated requests using `nextPageToken`
+- Extracting video `id`, `title`, and `publishedAt` from the search results
+- Fetching additional video details (like `viewCount`, `likeCount`, `commentCount`, `tags`, and `description`) from the `videos().list()` endpoint
+
+The collected data is stored in a list of dictionaries (`video_data`), one for each video.
+
+```{python}
+video_data = []
+
+# Paginate through all videos
+next_page_token = None
+
+while True:
+    request = youtube.search().list(
+        part = "snippet",
+        channelId = 'UCSHZKyawb77ixDdsGog4iWA',
+        maxResults = 50,
+        publishedAfter = two_years_ago,
+        publishedBefore = today,
+        order = "date",
+        type = "video",
+        pageToken = next_page_token
+    )
+    response = request.execute()
+    
+    for item in response['items']:
+        video_id = item['id']['videoId']
+        title = item['snippet']['title']
+        published = item['snippet']['publishedAt']
+        
+        # Get video stats
+        video_request = youtube.videos().list(
+            part = "statistics,snippet",
+            id = video_id
+        )
+        video_response = video_request.execute()
+        
+        for v in video_response['items']:
+            stats = v['statistics']
+            snippet = v['snippet']
+            video_data.append({
+                "videoId": video_id,
+                "title": title,
+                "publishedAt": published,
+                "viewCount": int(stats.get("viewCount", 0)),
+                "likeCount": int(stats.get("likeCount", 0)),
+                "commentCount": int(stats.get("commentCount", 0)),
+                "tags": snippet.get("tags", []),
+                "description": snippet.get("description", "")
+            })
+
+    # Check if more pages exist
+    next_page_token = response.get("nextPageToken")
+    if not next_page_token:
+        break
+```
+
+## Save Video Metadata to CSV
+
+We convert the collected `video_data` list into a pandas DataFrame (`video_df`) and save it as a CSV file.
+
+- `os.path.join(...)` creates a system-safe file path  
+- `to_csv(..., index=False)` writes the data to disk without row numbers  
+- This file will be used later for data cleaning and analysis
+
+The raw video metadata is now safely stored in the `raw_dir` folder.
+
+```{python}
+video_df = pd.DataFrame(video_data)
+video_filename = os.path.join(raw_dir, "lex_fridman_videos.csv")
+video_df.to_csv(video_filename, index=False)
+print("Saved video metadata. Total videos:", len(video_df))
+print(f"\nvideo datase saved to: {video_filename}")
+```
+
+## Fetch Top 50 Comments for Each Video
+
+We use the YouTube Data API to fetch the top 50 top-level comments for each video:
+
+- Loop through every `videoId` from the previously collected video data  
+- Use `commentThreads().list()` to request plain text comments  
+- Extract key details:
+  - `authorDisplayName`
+  - `textDisplay` (original comment)
+  - `likeCount` on the comment
+  - `publishedAt` (when the comment was posted)
+
+A `time.sleep(1)` delay is added between requests to respect API rate limits.
+
+All collected comments are stored in a list of dictionaries (`comment_data`) for later saving.
+
+```{python}
+import time
+
+comment_data = []
+
+for video_id in video_df['videoId']:
+    try:
+        request = youtube.commentThreads().list(
+            part = "snippet",
+            videoId = video_id,
+            maxResults = 50,
+            textFormat = "plainText"
+        )
+        response = request.execute()
+
+        for item in response.get('items', []):
+            snippet = item['snippet']['topLevelComment']['snippet']
+            comment_data.append({
+                "videoId": video_id,
+                "authorDisplayName": snippet.get("authorDisplayName", ""),
+                "textDisplay": snippet.get("textDisplay", ""),
+                "likeCount": snippet.get("likeCount", 0),
+                "publishedAt": snippet.get("publishedAt", "")
+            })
+
+        # Delay to avoid hitting rate limits
+        time.sleep(1)
+
+    except Exception as e:
+        print(f"Error fetching comments for {video_id}: {e}")
+```
+
+### Save Comments to CSV
+
+We convert the collected `comment_data` into a pandas DataFrame (`comments_df`) and save it as a CSV file.
+
+- `os.path.join(...)` builds the full file path safely  
+- `to_csv(..., index=False)` writes the comments to disk  
+- The saved file will be used in the data cleaning and sentiment analysis steps
+
+All YouTube comments are now stored in `lex_fridman_comments.csv` inside the `raw_dir` folder.
+
+```{python}
+comments_df = pd.DataFrame(comment_data)
+comments_filename = os.path.join(raw_dir, "lex_fridman_comments.csv")
+comments_df.to_csv(comments_filename, index=False)
+print("Saved comments. Total:", len(comments_df))
+print(f"\nvideo datase saved to: {comments_filename}")
+```
+

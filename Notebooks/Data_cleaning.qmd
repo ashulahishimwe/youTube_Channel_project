@@ -1,0 +1,422 @@
+---
+title: Data Cleaning
+jupyter: python3
+---
+
+
+Before we can analyze the YouTube data, we need to clean and prepare it.
+
+In this notebook, we perform essential cleaning tasks to ensure the data is structured, accurate, and ready for analysis.  
+This includes:
+
+- Converting date columns to proper datetime format  
+- Changing numeric columns from strings to numbers  
+- Removing empty or irrelevant comments  
+- Cleaning text for sentiment and word frequency analysis, etc
+
+Clean data helps us generate more accurate insights in the next steps.
+
+
+### These Libraries Are Used
+
+- `import pandas as pd`: To load and manipulate tabular data like CSV files efficiently.
+
+- `import numpy as np`: To handle missing values (like `np.nan`) and perform numerical operations.
+
+- `import os`: To manage file paths and environment variables if needed.
+
+- `import re`: To clean text using regular expressions (e.g., removing URLs or special characters).
+
+- `import nltk` and `from nltk.corpus import stopwords`: To download and use the list of stopwords (common words like "the", "and", etc.) that we remove during text cleaning.
+
+- `nltk.download('stopwords')`: To download the stopwords list the first time you use it.
+
+These libraries help us clean both the structured metadata and the unstructured comment text effectively.
+
+```{python}
+# Import libraries 
+import pandas as pd
+import numpy as np
+import os
+import re
+import nltk
+nltk.download('stopwords')
+from nltk.corpus import stopwords
+```
+
+## Define and Create Directory Paths
+
+To ensure reproducibility andorganized storage, we programmatically create directories for:
+
+- **raw data**
+- **processed data**
+- **results**
+- **documentation**
+
+These directories will store intermediate and final outputs for reproducibility.
+
+```{python}
+#Get working directory
+current_dir = os.getcwd()
+#go one directory up to root directory
+project_root_dir = os.path.dirname(current_dir)
+#Define path to data files
+data_dir = os.path.join(project_root_dir, 'data')
+raw_dir = os.path.join(data_dir, 'raw')
+processed_dir = os.path.join(data_dir, 'processed')
+#Define path to results folder
+results_dir = os.path.join(project_root_dir, 'results')
+#Define path to results folder
+docs_dir = os.path.join(project_root_dir, 'docs')
+
+#Create directories if they do not exist
+os.makedirs(raw_dir, exist_ok=True)
+os.makedirs(processed_dir, exist_ok=True)
+os.makedirs(results_dir, exist_ok=True)
+os.makedirs(docs_dir, exist_ok=True)
+```
+
+### Load Raw CSV Files
+
+In this step, we load the raw video and comment data from CSV files into pandas DataFrames.
+
+- `os.path.join(...)` ensures file paths work across all operating systems  
+- `na_values="?"` treats any "?" as a missing value  
+- `skipinitialspace=True` removes extra spaces after commas in the CSV
+
+We now have two datasets:
+- `video_df`: Video metadata
+- `comments_df`: Comment data
+
+```{python}
+video_filename = os.path.join(raw_dir, "lex_fridman_videos.csv")
+video_df = pd.read_csv(video_filename, na_values="?", skipinitialspace=True)
+
+comments_filename = os.path.join(raw_dir, "lex_fridman_comments.csv")
+comments_df = pd.read_csv(comments_filename, na_values="?", skipinitialspace=True)
+```
+
+### View Dataset Columns
+
+We print the column names of both datasets to understand the structure and what kind of data is available for cleaning.
+
+- `video_df.columns` shows the fields related to video metadata  
+- `comments_df.columns` shows the fields related to user comments
+
+```{python}
+print(video_df.columns)
+print(comments_df.columns)
+```
+
+### Dataset Dimensions
+
+We check the number of rows and columns in each dataset using `.shape`.
+
+- This helps us understand the dataset size and whether it’s manageable  
+- Format: `(rows, columns)`
+
+```{python}
+print(video_df.shape)
+print(comments_df.shape)
+```
+
+### Dataset Overview
+
+We use `.info()` to get a summary of each dataset.
+
+- Shows column data types (e.g., object, int, float, datetime)
+- Shows number of non-null (non-missing) values in each column
+- Helps identify which columns need type conversion or missing value handling
+
+```{python}
+print(video_df.info())
+print("---------------------------------------------------")
+print(comments_df.info())
+```
+
+### Missing Values Check
+
+We use `.isna().sum()` to count the number of missing (NaN) values in each column.
+
+- This helps identify which fields need cleaning or filling  
+- We’ll decide whether to fill, drop, or ignore based on the amount and importance of missing data
+
+```{python}
+print(video_df.isna().sum())
+print("---------------------------------")
+print(comments_df.isna().sum())
+```
+
+### Fill Missing Text Fields
+
+We replace missing values in important text columns to avoid errors later:
+
+- Video descriptions (`description`) are filled with `'Null'`
+- Missing commenter names (`authorDisplayName`) are filled with `'unknown'`
+
+This keeps the data consistent and safe for further processing.
+
+```{python}
+video_df['description'] = video_df['description'].fillna('Null')
+comments_df['authorDisplayName'] = comments_df['authorDisplayName'].fillna('unknown')
+```
+
+we check for null values again, we didn't replace one of text display because we will delete it later
+
+```{python}
+print(video_df.isna().sum())
+print("---------------------------------")
+print(comments_df.isna().sum())
+```
+
+we checked duplicated values again and we didn't find any
+
+```{python}
+print(video_df.duplicated().sum())
+print("---------------------------------")
+print(comments_df.duplicated().sum())
+```
+
+### Check for Object-Type Columns
+
+We check which columns have the `object` data type (usually text or mixed data).
+
+- This helps identify columns that might need conversion to `datetime`, `int`, or `float`
+- It also prepares us to clean or process text fields more effectively
+
+```{python}
+print(video_df.dtypes == object)
+print("---------------------------------")
+print(comments_df.dtypes == object)
+```
+
+### Preview Video and Comments Dataset
+
+We use `.head()` to display the first 5 rows of the video metadata.
+
+- Helps us visually inspect the data  
+- Confirms that columns are loaded and readable
+
+```{python}
+video_df.head()
+```
+
+```{python}
+comments_df.head()
+```
+
+## Clean Video Metadata
+
+Here’s what we’ll do:
+
+- Convert dates to datetime
+
+- Make numbers numeric
+
+- Clean text fields
+
+### Clean and Convert Video Data
+
+We clean and convert key columns in the video dataset:
+
+- `publishedAt`: Converted to datetime for time-based analysis  
+- `viewCount`, `likeCount`, `commentCount`: Converted to numeric (in case they were strings)  
+- `title` and `description`: Cleaned to remove newlines and extra spaces
+
+This ensures consistent formats and prepares the data for accurate visualizations.
+
+```{python}
+# Convert publishedAt to datetime
+video_df['publishedAt'] = pd.to_datetime(video_df['publishedAt'])
+
+# Convert numeric fields
+video_df['viewCount'] = pd.to_numeric(video_df['viewCount'], errors='coerce')
+video_df['likeCount'] = pd.to_numeric(video_df['likeCount'], errors='coerce')
+video_df['commentCount'] = pd.to_numeric(video_df['commentCount'], errors='coerce')
+
+# Clean text fields (remove line breaks and extra spaces)
+video_df['title'] = video_df['title'].str.replace('\n', ' ').str.strip()
+video_df['description'] = video_df['description'].str.replace('\n', ' ').str.strip()
+
+video_df.head()
+```
+
+### Rename Columns for Clarity
+
+We rename columns to make it clear whether the data comes from videos or comments:
+
+- `publishedAt` → `videoPublishedAt` and `commentPublishedAt`  
+- `likeCount` → `videoLikeCount` and `commentLikeCount`
+
+This avoids confusion when merging or analyzing both datasets together.
+
+```{python}
+video_df.rename(columns={'publishedAt': 'videoPublishedAt'}, inplace=True)
+comments_df.rename(columns={'publishedAt': 'commentPublishedAt'}, inplace=True)
+video_df.rename(columns={'likeCount': 'videoLikeCount'}, inplace=True)
+comments_df.rename(columns={'likeCount': 'commentLikeCount'}, inplace=True)
+```
+
+### Verify Updated Column Names
+
+We print the column names again to confirm that renaming was successful.
+
+- Ensures that the changes were applied correctly  
+- Helps us move forward with confidence when merging or analyzing data
+
+```{python}
+print(video_df.columns)
+print(comments_df.columns)
+```
+
+### Final Cleanup of Video Data
+
+We reapply important cleaning steps to ensure consistency with the renamed columns:
+
+- `videoPublishedAt`: Converted to datetime format  
+- `viewCount`, `videoLikeCount`, `commentCount`: Converted to numeric values  
+- `title` and `description`: Cleaned to remove line breaks and extra spaces
+
+This step guarantees that all key fields are clean and ready for merging or analysis.
+
+```{python}
+# Convert publishedAt to datetime
+video_df['videoPublishedAt'] = pd.to_datetime(video_df['videoPublishedAt'])
+
+# Convert numeric fields
+video_df['viewCount'] = pd.to_numeric(video_df['viewCount'], errors='coerce')
+video_df['videoLikeCount'] = pd.to_numeric(video_df['videoLikeCount'], errors='coerce')
+video_df['commentCount'] = pd.to_numeric(video_df['commentCount'], errors='coerce')
+
+# Clean text fields (remove line breaks and extra spaces)
+video_df['title'] = video_df['title'].str.replace('\n', ' ').str.strip()
+video_df['description'] = video_df['description'].str.replace('\n', ' ').str.strip()
+
+video_df.head()
+```
+
+## Clean Comment Data
+
+Here’s what we’ll do:
+
+- Remove empty or deleted comments
+
+- Convert date
+
+- Clean and tokenize text
+
+### Clean Comments Data
+
+We prepare the comments for sentiment and text analysis by:
+
+- Removing rows with missing or `[deleted]` comments  
+- Converting `commentPublishedAt` to datetime format  
+- Cleaning `textDisplay` to create a `clean_text` column:
+  - Removes URLs and special characters  
+  - Converts text to lowercase  
+  - Removes English stopwords (e.g., "the", "and", "is")
+
+This results in clean, meaningful text ready for sentiment analysis and word frequency visuals.
+
+```{python}
+# Remove [deleted] or empty comments
+comments_df = comments_df[comments_df['textDisplay'].notna()]
+comments_df = comments_df[~comments_df['textDisplay'].str.contains('\[deleted\]', case=False)]
+
+# Convert to datetime
+comments_df['commentPublishedAt'] = pd.to_datetime(comments_df['commentPublishedAt'])
+
+# Clean comment text
+def clean_comment(text):
+    text = re.sub(r"http\S+", "", text)  # Remove URLs
+    text = re.sub(r"[^A-Za-z\s]", "", text)  # Remove special characters
+    text = text.lower()
+    words = text.split()
+    words = [word for word in words if word not in stopwords.words('english')]
+    return " ".join(words)
+
+comments_df['clean_text'] = comments_df['textDisplay'].astype(str).apply(clean_comment)
+
+comments_df.head()
+```
+
+## Merge the datasets
+
+We merge the video and comment datasets using `videoId` as the key.
+
+- `how="inner"` keeps only the records that exist in both datasets  
+- The result (`merged_df`) combines video metadata with its related comments
+
+This merged dataset will be used for analysis, sentiment, and visualizations.
+
+```{python}
+merged_df = pd.merge(comments_df, video_df, on="videoId", how="inner")
+merged_df.head()
+```
+
+### Understanding the dataset
+
+Before proceeding with the cleaning, we would like to understanding the variables deeply. This would help guide the cleaning process. The subsequent tables detail the types, meaning and values or ranges of the variables in the dataset.
+
+**Summary Table of the Variables in the Merged Dataset**
+
+| Variable             | Type      | Description                                             | Values / Range (excluding NaN)                      |
+|----------------------|-----------|---------------------------------------------------------|------------------------------------------------------|
+| videoId              | object    | Unique ID for each video                               | Strings (e.g., `_P7S2lKif-A`)                        |
+| authorDisplayName    | object    | Name of the comment author                              | Strings (e.g., "John Doe", "unknown")               |
+| textDisplay          | object    | Original comment text                                   | User-written text, can be long                       |
+| commentLikeCount     | int       | Number of likes on the comment                          | 0 to hundreds                                       |
+| commentPublishedAt   | datetime  | Date when the comment was posted                        | 2-year range (e.g., 2022–2024)                      |
+| clean_text           | object    | Cleaned comment text (for analysis)                     | Lowercased, punctuation-free words                  |
+| title                | object    | Title of the video                                      | Short strings (titles)                              |
+| videoPublishedAt     | datetime  | Date when the video was published                       | 2-year range                                        |
+| viewCount            | int       | Total views on the video                                | Varies — 1,000s to millions                         |
+| videoLikeCount       | int       | Total likes on the video                                | Varies — 0 to hundreds of thousands                 |
+| commentCount         | int       | Total comments on the video                             | 0 to thousands                                      |
+| tags                 | object    | Tags or keywords associated with the video              | Lists (e.g., ['AI', 'Podcast'])                     |
+| description          | object    | Description of the video                                | Text (can be multiline)                             |
+| sentiment            | object    | Sentiment label for the comment                         | Positive, Neutral, Negative                         |
+
+### Check for Duplicate Rows
+
+We use `.duplicated().sum()` to count any exact duplicate rows in the merged dataset.
+
+- Helps ensure data integrity before analysis  
+- If duplicates exist, we may choose to remove them
+
+A clean dataset should have little to no duplicates.
+
+```{python}
+merged_df.duplicated().sum()
+```
+
+### Check for Missing Values in Merged Data
+
+We use `.isna().sum()` to identify any missing values in the merged dataset.
+
+- Helps us detect fields that might need cleaning or filling  
+- Ensures no important column is left incomplete before analysis
+
+This step ensures our final dataset is reliable and ready for insights.
+
+```{python}
+merged_df.isna().sum()
+```
+
+### Save Cleaned Dataset
+
+We save the cleaned and merged dataset to a new CSV file for future analysis.
+
+- `os.path.join(...)` ensures the path works on any system  
+- `to_csv(..., index=False)` saves the file without row numbers  
+- The final file is ready for exploratory analysis, sentiment analysis, and visualization
+
+Cleaned data is now safely stored and reusable.
+
+```{python}
+clean_filename = os.path.join(processed_dir, "Video_Comments_DS.csv")
+merged_df.to_csv(clean_filename, index=False)
+print("Saved Video&Comments. Total:", len(merged_df))
+print(f"\nCleaned data saved to: {clean_filename}")
+```
+

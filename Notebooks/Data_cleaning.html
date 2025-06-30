@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.31">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Data Cleaning</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="Data_cleaning_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Data_cleaning_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="Data_cleaning_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="Data_cleaning_files/libs/quarto-html/popper.min.js"></script>
+<script src="Data_cleaning_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Data_cleaning_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Data_cleaning_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Data_cleaning_files/libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Data_cleaning_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Data_cleaning_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Data_cleaning_files/libs/bootstrap/bootstrap-bb462d781dde1847d9e3ccf7736099dd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Data Cleaning</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Before we can analyze the YouTube data, we need to clean and prepare it.</p>
+<p>In this notebook, we perform essential cleaning tasks to ensure the data is structured, accurate, and ready for analysis.<br>
+This includes:</p>
+<ul>
+<li>Converting date columns to proper datetime format<br>
+</li>
+<li>Changing numeric columns from strings to numbers<br>
+</li>
+<li>Removing empty or irrelevant comments<br>
+</li>
+<li>Cleaning text for sentiment and word frequency analysis, etc</li>
+</ul>
+<p>Clean data helps us generate more accurate insights in the next steps.</p>
+<section id="these-libraries-are-used" class="level3">
+<h3 class="anchored" data-anchor-id="these-libraries-are-used">These Libraries Are Used</h3>
+<ul>
+<li><p><code>import pandas as pd</code>: To load and manipulate tabular data like CSV files efficiently.</p></li>
+<li><p><code>import numpy as np</code>: To handle missing values (like <code>np.nan</code>) and perform numerical operations.</p></li>
+<li><p><code>import os</code>: To manage file paths and environment variables if needed.</p></li>
+<li><p><code>import re</code>: To clean text using regular expressions (e.g., removing URLs or special characters).</p></li>
+<li><p><code>import nltk</code> and <code>from nltk.corpus import stopwords</code>: To download and use the list of stopwords (common words like “the”, “and”, etc.) that we remove during text cleaning.</p></li>
+<li><p><code>nltk.download('stopwords')</code>: To download the stopwords list the first time you use it.</p></li>
+</ul>
+<p>These libraries help us clean both the structured metadata and the unstructured comment text effectively.</p>
+<div id="bb7b3680-c5ee-478e-aaac-3cf52f8e90c2" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Import libraries </span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> re</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> nltk</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>nltk.download(<span class="st">'stopwords'</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> nltk.corpus <span class="im">import</span> stopwords</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>[nltk_data] Downloading package stopwords to
+[nltk_data]     C:\Users\user\AppData\Roaming\nltk_data...
+[nltk_data]   Package stopwords is already up-to-date!</code></pre>
+</div>
+</div>
+</section>
+<section id="define-and-create-directory-paths" class="level2">
+<h2 class="anchored" data-anchor-id="define-and-create-directory-paths">Define and Create Directory Paths</h2>
+<p>To ensure reproducibility andorganized storage, we programmatically create directories for:</p>
+<ul>
+<li><strong>raw data</strong></li>
+<li><strong>processed data</strong></li>
+<li><strong>results</strong></li>
+<li><strong>documentation</strong></li>
+</ul>
+<p>These directories will store intermediate and final outputs for reproducibility.</p>
+<div id="8627f29f-ad58-421d-98c9-f5d3c7d81aed" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Get working directory</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>current_dir <span class="op">=</span> os.getcwd()</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#go one directory up to root directory</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>project_root_dir <span class="op">=</span> os.path.dirname(current_dir)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#Define path to data files</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>data_dir <span class="op">=</span> os.path.join(project_root_dir, <span class="st">'data'</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>raw_dir <span class="op">=</span> os.path.join(data_dir, <span class="st">'raw'</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>processed_dir <span class="op">=</span> os.path.join(data_dir, <span class="st">'processed'</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">#Define path to results folder</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>results_dir <span class="op">=</span> os.path.join(project_root_dir, <span class="st">'results'</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#Define path to results folder</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>docs_dir <span class="op">=</span> os.path.join(project_root_dir, <span class="st">'docs'</span>)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co">#Create directories if they do not exist</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>os.makedirs(raw_dir, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>os.makedirs(processed_dir, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>os.makedirs(results_dir, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>os.makedirs(docs_dir, exist_ok<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="load-raw-csv-files" class="level3">
+<h3 class="anchored" data-anchor-id="load-raw-csv-files">Load Raw CSV Files</h3>
+<p>In this step, we load the raw video and comment data from CSV files into pandas DataFrames.</p>
+<ul>
+<li><code>os.path.join(...)</code> ensures file paths work across all operating systems<br>
+</li>
+<li><code>na_values="?"</code> treats any “?” as a missing value<br>
+</li>
+<li><code>skipinitialspace=True</code> removes extra spaces after commas in the CSV</li>
+</ul>
+<p>We now have two datasets: - <code>video_df</code>: Video metadata - <code>comments_df</code>: Comment data</p>
+<div id="bffab643-8b50-4fa9-821d-57672ee348aa" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>video_filename <span class="op">=</span> os.path.join(raw_dir, <span class="st">"lex_fridman_videos.csv"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>video_df <span class="op">=</span> pd.read_csv(video_filename, na_values<span class="op">=</span><span class="st">"?"</span>, skipinitialspace<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>comments_filename <span class="op">=</span> os.path.join(raw_dir, <span class="st">"lex_fridman_comments.csv"</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>comments_df <span class="op">=</span> pd.read_csv(comments_filename, na_values<span class="op">=</span><span class="st">"?"</span>, skipinitialspace<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="view-dataset-columns" class="level3">
+<h3 class="anchored" data-anchor-id="view-dataset-columns">View Dataset Columns</h3>
+<p>We print the column names of both datasets to understand the structure and what kind of data is available for cleaning.</p>
+<ul>
+<li><code>video_df.columns</code> shows the fields related to video metadata<br>
+</li>
+<li><code>comments_df.columns</code> shows the fields related to user comments</li>
+</ul>
+<div id="c9053820-93e3-460d-a285-519bf9bba095" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(video_df.columns)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(comments_df.columns)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Index(['videoId', 'title', 'publishedAt', 'viewCount', 'likeCount',
+       'commentCount', 'tags', 'description'],
+      dtype='object')
+Index(['videoId', 'authorDisplayName', 'textDisplay', 'likeCount',
+       'publishedAt'],
+      dtype='object')</code></pre>
+</div>
+</div>
+</section>
+<section id="dataset-dimensions" class="level3">
+<h3 class="anchored" data-anchor-id="dataset-dimensions">Dataset Dimensions</h3>
+<p>We check the number of rows and columns in each dataset using <code>.shape</code>.</p>
+<ul>
+<li>This helps us understand the dataset size and whether it’s manageable<br>
+</li>
+<li>Format: <code>(rows, columns)</code></li>
+</ul>
+<div id="77e4c4c5-6111-4d1a-ba32-770fe3461122" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(video_df.shape)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(comments_df.shape)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(94, 8)
+(4684, 5)</code></pre>
+</div>
+</div>
+</section>
+<section id="dataset-overview" class="level3">
+<h3 class="anchored" data-anchor-id="dataset-overview">Dataset Overview</h3>
+<p>We use <code>.info()</code> to get a summary of each dataset.</p>
+<ul>
+<li>Shows column data types (e.g., object, int, float, datetime)</li>
+<li>Shows number of non-null (non-missing) values in each column</li>
+<li>Helps identify which columns need type conversion or missing value handling</li>
+</ul>
+<div id="0ca94ac7-6f2c-42e2-900c-254cd2ecf7d8" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(video_df.info())</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"---------------------------------------------------"</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(comments_df.info())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 94 entries, 0 to 93
+Data columns (total 8 columns):
+ #   Column        Non-Null Count  Dtype 
+---  ------        --------------  ----- 
+ 0   videoId       94 non-null     object
+ 1   title         94 non-null     object
+ 2   publishedAt   94 non-null     object
+ 3   viewCount     94 non-null     int64 
+ 4   likeCount     94 non-null     int64 
+ 5   commentCount  94 non-null     int64 
+ 6   tags          94 non-null     object
+ 7   description   91 non-null     object
+dtypes: int64(3), object(5)
+memory usage: 6.0+ KB
+None
+---------------------------------------------------
+&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 4684 entries, 0 to 4683
+Data columns (total 5 columns):
+ #   Column             Non-Null Count  Dtype 
+---  ------             --------------  ----- 
+ 0   videoId            4684 non-null   object
+ 1   authorDisplayName  4682 non-null   object
+ 2   textDisplay        4682 non-null   object
+ 3   likeCount          4684 non-null   int64 
+ 4   publishedAt        4684 non-null   object
+dtypes: int64(1), object(4)
+memory usage: 183.1+ KB
+None</code></pre>
+</div>
+</div>
+</section>
+<section id="missing-values-check" class="level3">
+<h3 class="anchored" data-anchor-id="missing-values-check">Missing Values Check</h3>
+<p>We use <code>.isna().sum()</code> to count the number of missing (NaN) values in each column.</p>
+<ul>
+<li>This helps identify which fields need cleaning or filling<br>
+</li>
+<li>We’ll decide whether to fill, drop, or ignore based on the amount and importance of missing data</li>
+</ul>
+<div id="2ce89f17-ef06-41ae-abc8-d236495975ec" class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(video_df.isna().<span class="bu">sum</span>())</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"---------------------------------"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(comments_df.isna().<span class="bu">sum</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>videoId         0
+title           0
+publishedAt     0
+viewCount       0
+likeCount       0
+commentCount    0
+tags            0
+description     3
+dtype: int64
+---------------------------------
+videoId              0
+authorDisplayName    2
+textDisplay          2
+likeCount            0
+publishedAt          0
+dtype: int64</code></pre>
+</div>
+</div>
+</section>
+<section id="fill-missing-text-fields" class="level3">
+<h3 class="anchored" data-anchor-id="fill-missing-text-fields">Fill Missing Text Fields</h3>
+<p>We replace missing values in important text columns to avoid errors later:</p>
+<ul>
+<li>Video descriptions (<code>description</code>) are filled with <code>'Null'</code></li>
+<li>Missing commenter names (<code>authorDisplayName</code>) are filled with <code>'unknown'</code></li>
+</ul>
+<p>This keeps the data consistent and safe for further processing.</p>
+<div id="1346cbfd-33cb-470c-a684-cc52fbae1a8a" class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>video_df[<span class="st">'description'</span>] <span class="op">=</span> video_df[<span class="st">'description'</span>].fillna(<span class="st">'Null'</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>comments_df[<span class="st">'authorDisplayName'</span>] <span class="op">=</span> comments_df[<span class="st">'authorDisplayName'</span>].fillna(<span class="st">'unknown'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>we check for null values again, we didn’t replace one of text display because we will delete it later</p>
+<div id="cd7085cc-13d5-4a2d-87b1-f74f4a16c65e" class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(video_df.isna().<span class="bu">sum</span>())</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"---------------------------------"</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(comments_df.isna().<span class="bu">sum</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>videoId         0
+title           0
+publishedAt     0
+viewCount       0
+likeCount       0
+commentCount    0
+tags            0
+description     0
+dtype: int64
+---------------------------------
+videoId              0
+authorDisplayName    0
+textDisplay          2
+likeCount            0
+publishedAt          0
+dtype: int64</code></pre>
+</div>
+</div>
+<p>we checked duplicated values again and we didn’t find any</p>
+<div id="571c798e-0be2-4a93-932f-fc3e5f3843d5" class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(video_df.duplicated().<span class="bu">sum</span>())</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"---------------------------------"</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(comments_df.duplicated().<span class="bu">sum</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>0
+---------------------------------
+0</code></pre>
+</div>
+</div>
+</section>
+<section id="check-for-object-type-columns" class="level3">
+<h3 class="anchored" data-anchor-id="check-for-object-type-columns">Check for Object-Type Columns</h3>
+<p>We check which columns have the <code>object</code> data type (usually text or mixed data).</p>
+<ul>
+<li>This helps identify columns that might need conversion to <code>datetime</code>, <code>int</code>, or <code>float</code></li>
+<li>It also prepares us to clean or process text fields more effectively</li>
+</ul>
+<div id="a851259e-4553-483d-acaa-68ec866b56a5" class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(video_df.dtypes <span class="op">==</span> <span class="bu">object</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"---------------------------------"</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(comments_df.dtypes <span class="op">==</span> <span class="bu">object</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>videoId          True
+title            True
+publishedAt      True
+viewCount       False
+likeCount       False
+commentCount    False
+tags             True
+description      True
+dtype: bool
+---------------------------------
+videoId               True
+authorDisplayName     True
+textDisplay           True
+likeCount            False
+publishedAt           True
+dtype: bool</code></pre>
+</div>
+</div>
+</section>
+<section id="preview-video-and-comments-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="preview-video-and-comments-dataset">Preview Video and Comments Dataset</h3>
+<p>We use <code>.head()</code> to display the first 5 rows of the video metadata.</p>
+<ul>
+<li>Helps us visually inspect the data<br>
+</li>
+<li>Confirms that columns are loaded and readable</li>
+</ul>
+<div id="09eb63de-4646-4ed1-a610-504c204a7a33" class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>video_df.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="23">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">videoId</th>
+<th data-quarto-table-cell-role="th">title</th>
+<th data-quarto-table-cell-role="th">publishedAt</th>
+<th data-quarto-table-cell-role="th">viewCount</th>
+<th data-quarto-table-cell-role="th">likeCount</th>
+<th data-quarto-table-cell-role="th">commentCount</th>
+<th data-quarto-table-cell-role="th">tags</th>
+<th data-quarto-table-cell-role="th">description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>UN5qgBk6MwY</td>
+<td>Terence Tao on Grigori Perelman declining the ...</td>
+<td>2025-06-19T23:23:00Z</td>
+<td>167222</td>
+<td>3301</td>
+<td>60</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>HUkBz-cdB-k</td>
+<td>Terence Tao: Hardest Problems in Mathematics, ...</td>
+<td>2025-06-14T20:15:34Z</td>
+<td>702226</td>
+<td>15133</td>
+<td>1426</td>
+<td>['Terence Tao', 'alex friedman', 'lex ai', 'le...</td>
+<td>Terence Tao is widely considered to be one of ...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>b268x2kzefY</td>
+<td>Lex Fridman tests Google XR glasses</td>
+<td>2025-06-13T00:37:30Z</td>
+<td>89074</td>
+<td>2819</td>
+<td>147</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>ufI31PNM9u8</td>
+<td>Google CEO on Elon Musk, Tesla, and Waymo</td>
+<td>2025-06-10T20:51:39Z</td>
+<td>78715</td>
+<td>1805</td>
+<td>90</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>sXPONXB8WCo</td>
+<td>Lex Fridman tests Google Beam</td>
+<td>2025-06-06T23:04:59Z</td>
+<td>401132</td>
+<td>6607</td>
+<td>261</td>
+<td>[]</td>
+<td>This is a clip from a podcast episode with Goo...</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="c7471d51-3d57-4127-8e0b-ae946b243903" class="cell" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>comments_df.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="25">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">videoId</th>
+<th data-quarto-table-cell-role="th">authorDisplayName</th>
+<th data-quarto-table-cell-role="th">textDisplay</th>
+<th data-quarto-table-cell-role="th">likeCount</th>
+<th data-quarto-table-cell-role="th">publishedAt</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>UN5qgBk6MwY</td>
+<td>@iliya-malecki</td>
+<td>Id prefer to watch a video on one of the great...</td>
+<td>0</td>
+<td>2025-06-25T23:29:49Z</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>UN5qgBk6MwY</td>
+<td>@4D_art</td>
+<td>Grigori “Pearl”man .</td>
+<td>0</td>
+<td>2025-06-25T20:48:16Z</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>UN5qgBk6MwY</td>
+<td>@tomorrows-med</td>
+<td>Pure genius</td>
+<td>0</td>
+<td>2025-06-25T14:04:09Z</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>UN5qgBk6MwY</td>
+<td>@extavwudda</td>
+<td>I am so sick of Lex sucking up to people</td>
+<td>0</td>
+<td>2025-06-25T06:08:24Z</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>UN5qgBk6MwY</td>
+<td>@michealvallieres9228</td>
+<td>Dude why would you interview a guy that's neve...</td>
+<td>0</td>
+<td>2025-06-23T23:40:40Z</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="clean-video-metadata" class="level2">
+<h2 class="anchored" data-anchor-id="clean-video-metadata">Clean Video Metadata</h2>
+<p>Here’s what we’ll do:</p>
+<ul>
+<li><p>Convert dates to datetime</p></li>
+<li><p>Make numbers numeric</p></li>
+<li><p>Clean text fields</p></li>
+</ul>
+<section id="clean-and-convert-video-data" class="level3">
+<h3 class="anchored" data-anchor-id="clean-and-convert-video-data">Clean and Convert Video Data</h3>
+<p>We clean and convert key columns in the video dataset:</p>
+<ul>
+<li><code>publishedAt</code>: Converted to datetime for time-based analysis<br>
+</li>
+<li><code>viewCount</code>, <code>likeCount</code>, <code>commentCount</code>: Converted to numeric (in case they were strings)<br>
+</li>
+<li><code>title</code> and <code>description</code>: Cleaned to remove newlines and extra spaces</li>
+</ul>
+<p>This ensures consistent formats and prepares the data for accurate visualizations.</p>
+<div id="1cb3263b-21c1-455b-812f-99dd0433b29a" class="cell" data-execution_count="27">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert publishedAt to datetime</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>video_df[<span class="st">'publishedAt'</span>] <span class="op">=</span> pd.to_datetime(video_df[<span class="st">'publishedAt'</span>])</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert numeric fields</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>video_df[<span class="st">'viewCount'</span>] <span class="op">=</span> pd.to_numeric(video_df[<span class="st">'viewCount'</span>], errors<span class="op">=</span><span class="st">'coerce'</span>)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>video_df[<span class="st">'likeCount'</span>] <span class="op">=</span> pd.to_numeric(video_df[<span class="st">'likeCount'</span>], errors<span class="op">=</span><span class="st">'coerce'</span>)</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>video_df[<span class="st">'commentCount'</span>] <span class="op">=</span> pd.to_numeric(video_df[<span class="st">'commentCount'</span>], errors<span class="op">=</span><span class="st">'coerce'</span>)</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean text fields (remove line breaks and extra spaces)</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>video_df[<span class="st">'title'</span>] <span class="op">=</span> video_df[<span class="st">'title'</span>].<span class="bu">str</span>.replace(<span class="st">'</span><span class="ch">\n</span><span class="st">'</span>, <span class="st">' '</span>).<span class="bu">str</span>.strip()</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>video_df[<span class="st">'description'</span>] <span class="op">=</span> video_df[<span class="st">'description'</span>].<span class="bu">str</span>.replace(<span class="st">'</span><span class="ch">\n</span><span class="st">'</span>, <span class="st">' '</span>).<span class="bu">str</span>.strip()</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>video_df.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="27">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">videoId</th>
+<th data-quarto-table-cell-role="th">title</th>
+<th data-quarto-table-cell-role="th">publishedAt</th>
+<th data-quarto-table-cell-role="th">viewCount</th>
+<th data-quarto-table-cell-role="th">likeCount</th>
+<th data-quarto-table-cell-role="th">commentCount</th>
+<th data-quarto-table-cell-role="th">tags</th>
+<th data-quarto-table-cell-role="th">description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>UN5qgBk6MwY</td>
+<td>Terence Tao on Grigori Perelman declining the ...</td>
+<td>2025-06-19 23:23:00+00:00</td>
+<td>167222</td>
+<td>3301</td>
+<td>60</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>HUkBz-cdB-k</td>
+<td>Terence Tao: Hardest Problems in Mathematics, ...</td>
+<td>2025-06-14 20:15:34+00:00</td>
+<td>702226</td>
+<td>15133</td>
+<td>1426</td>
+<td>['Terence Tao', 'alex friedman', 'lex ai', 'le...</td>
+<td>Terence Tao is widely considered to be one of ...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>b268x2kzefY</td>
+<td>Lex Fridman tests Google XR glasses</td>
+<td>2025-06-13 00:37:30+00:00</td>
+<td>89074</td>
+<td>2819</td>
+<td>147</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>ufI31PNM9u8</td>
+<td>Google CEO on Elon Musk, Tesla, and Waymo</td>
+<td>2025-06-10 20:51:39+00:00</td>
+<td>78715</td>
+<td>1805</td>
+<td>90</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>sXPONXB8WCo</td>
+<td>Lex Fridman tests Google Beam</td>
+<td>2025-06-06 23:04:59+00:00</td>
+<td>401132</td>
+<td>6607</td>
+<td>261</td>
+<td>[]</td>
+<td>This is a clip from a podcast episode with Goo...</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="rename-columns-for-clarity" class="level3">
+<h3 class="anchored" data-anchor-id="rename-columns-for-clarity">Rename Columns for Clarity</h3>
+<p>We rename columns to make it clear whether the data comes from videos or comments:</p>
+<ul>
+<li><code>publishedAt</code> → <code>videoPublishedAt</code> and <code>commentPublishedAt</code><br>
+</li>
+<li><code>likeCount</code> → <code>videoLikeCount</code> and <code>commentLikeCount</code></li>
+</ul>
+<p>This avoids confusion when merging or analyzing both datasets together.</p>
+<div id="d97102c6-fd44-4951-a0c1-b66468dd73ac" class="cell" data-execution_count="33">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>video_df.rename(columns<span class="op">=</span>{<span class="st">'publishedAt'</span>: <span class="st">'videoPublishedAt'</span>}, inplace<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>comments_df.rename(columns<span class="op">=</span>{<span class="st">'publishedAt'</span>: <span class="st">'commentPublishedAt'</span>}, inplace<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>video_df.rename(columns<span class="op">=</span>{<span class="st">'likeCount'</span>: <span class="st">'videoLikeCount'</span>}, inplace<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>comments_df.rename(columns<span class="op">=</span>{<span class="st">'likeCount'</span>: <span class="st">'commentLikeCount'</span>}, inplace<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="verify-updated-column-names" class="level3">
+<h3 class="anchored" data-anchor-id="verify-updated-column-names">Verify Updated Column Names</h3>
+<p>We print the column names again to confirm that renaming was successful.</p>
+<ul>
+<li>Ensures that the changes were applied correctly<br>
+</li>
+<li>Helps us move forward with confidence when merging or analyzing data</li>
+</ul>
+<div id="204302b8-d28c-4762-b2d3-a42203b711a4" class="cell" data-execution_count="37">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(video_df.columns)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(comments_df.columns)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Index(['videoId', 'title', 'videoPublishedAt', 'viewCount', 'videoLikeCount',
+       'commentCount', 'tags', 'description'],
+      dtype='object')
+Index(['videoId', 'authorDisplayName', 'textDisplay', 'commentLikeCount',
+       'commentPublishedAt'],
+      dtype='object')</code></pre>
+</div>
+</div>
+</section>
+<section id="final-cleanup-of-video-data" class="level3">
+<h3 class="anchored" data-anchor-id="final-cleanup-of-video-data">Final Cleanup of Video Data</h3>
+<p>We reapply important cleaning steps to ensure consistency with the renamed columns:</p>
+<ul>
+<li><code>videoPublishedAt</code>: Converted to datetime format<br>
+</li>
+<li><code>viewCount</code>, <code>videoLikeCount</code>, <code>commentCount</code>: Converted to numeric values<br>
+</li>
+<li><code>title</code> and <code>description</code>: Cleaned to remove line breaks and extra spaces</li>
+</ul>
+<p>This step guarantees that all key fields are clean and ready for merging or analysis.</p>
+<div id="e361fff0-69a0-49da-ad0b-3e6362790e04" class="cell" data-execution_count="39">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert publishedAt to datetime</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>video_df[<span class="st">'videoPublishedAt'</span>] <span class="op">=</span> pd.to_datetime(video_df[<span class="st">'videoPublishedAt'</span>])</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert numeric fields</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>video_df[<span class="st">'viewCount'</span>] <span class="op">=</span> pd.to_numeric(video_df[<span class="st">'viewCount'</span>], errors<span class="op">=</span><span class="st">'coerce'</span>)</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>video_df[<span class="st">'videoLikeCount'</span>] <span class="op">=</span> pd.to_numeric(video_df[<span class="st">'videoLikeCount'</span>], errors<span class="op">=</span><span class="st">'coerce'</span>)</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>video_df[<span class="st">'commentCount'</span>] <span class="op">=</span> pd.to_numeric(video_df[<span class="st">'commentCount'</span>], errors<span class="op">=</span><span class="st">'coerce'</span>)</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean text fields (remove line breaks and extra spaces)</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>video_df[<span class="st">'title'</span>] <span class="op">=</span> video_df[<span class="st">'title'</span>].<span class="bu">str</span>.replace(<span class="st">'</span><span class="ch">\n</span><span class="st">'</span>, <span class="st">' '</span>).<span class="bu">str</span>.strip()</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>video_df[<span class="st">'description'</span>] <span class="op">=</span> video_df[<span class="st">'description'</span>].<span class="bu">str</span>.replace(<span class="st">'</span><span class="ch">\n</span><span class="st">'</span>, <span class="st">' '</span>).<span class="bu">str</span>.strip()</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>video_df.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="39">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">videoId</th>
+<th data-quarto-table-cell-role="th">title</th>
+<th data-quarto-table-cell-role="th">videoPublishedAt</th>
+<th data-quarto-table-cell-role="th">viewCount</th>
+<th data-quarto-table-cell-role="th">videoLikeCount</th>
+<th data-quarto-table-cell-role="th">commentCount</th>
+<th data-quarto-table-cell-role="th">tags</th>
+<th data-quarto-table-cell-role="th">description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>UN5qgBk6MwY</td>
+<td>Terence Tao on Grigori Perelman declining the ...</td>
+<td>2025-06-19 23:23:00+00:00</td>
+<td>167222</td>
+<td>3301</td>
+<td>60</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>HUkBz-cdB-k</td>
+<td>Terence Tao: Hardest Problems in Mathematics, ...</td>
+<td>2025-06-14 20:15:34+00:00</td>
+<td>702226</td>
+<td>15133</td>
+<td>1426</td>
+<td>['Terence Tao', 'alex friedman', 'lex ai', 'le...</td>
+<td>Terence Tao is widely considered to be one of ...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>b268x2kzefY</td>
+<td>Lex Fridman tests Google XR glasses</td>
+<td>2025-06-13 00:37:30+00:00</td>
+<td>89074</td>
+<td>2819</td>
+<td>147</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>ufI31PNM9u8</td>
+<td>Google CEO on Elon Musk, Tesla, and Waymo</td>
+<td>2025-06-10 20:51:39+00:00</td>
+<td>78715</td>
+<td>1805</td>
+<td>90</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>sXPONXB8WCo</td>
+<td>Lex Fridman tests Google Beam</td>
+<td>2025-06-06 23:04:59+00:00</td>
+<td>401132</td>
+<td>6607</td>
+<td>261</td>
+<td>[]</td>
+<td>This is a clip from a podcast episode with Goo...</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="clean-comment-data" class="level2">
+<h2 class="anchored" data-anchor-id="clean-comment-data">Clean Comment Data</h2>
+<p>Here’s what we’ll do:</p>
+<ul>
+<li><p>Remove empty or deleted comments</p></li>
+<li><p>Convert date</p></li>
+<li><p>Clean and tokenize text</p></li>
+</ul>
+<section id="clean-comments-data" class="level3">
+<h3 class="anchored" data-anchor-id="clean-comments-data">Clean Comments Data</h3>
+<p>We prepare the comments for sentiment and text analysis by:</p>
+<ul>
+<li>Removing rows with missing or <code>[deleted]</code> comments<br>
+</li>
+<li>Converting <code>commentPublishedAt</code> to datetime format<br>
+</li>
+<li>Cleaning <code>textDisplay</code> to create a <code>clean_text</code> column:
+<ul>
+<li>Removes URLs and special characters<br>
+</li>
+<li>Converts text to lowercase<br>
+</li>
+<li>Removes English stopwords (e.g., “the”, “and”, “is”)</li>
+</ul></li>
+</ul>
+<p>This results in clean, meaningful text ready for sentiment analysis and word frequency visuals.</p>
+<div id="e65718b1-b744-4ea0-8174-9f5e3269f573" class="cell" data-execution_count="44">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove [deleted] or empty comments</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>comments_df <span class="op">=</span> comments_df[comments_df[<span class="st">'textDisplay'</span>].notna()]</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>comments_df <span class="op">=</span> comments_df[<span class="op">~</span>comments_df[<span class="st">'textDisplay'</span>].<span class="bu">str</span>.contains(<span class="st">'</span><span class="er">\</span><span class="st">[deleted</span><span class="er">\</span><span class="st">]'</span>, case<span class="op">=</span><span class="va">False</span>)]</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert to datetime</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>comments_df[<span class="st">'commentPublishedAt'</span>] <span class="op">=</span> pd.to_datetime(comments_df[<span class="st">'commentPublishedAt'</span>])</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean comment text</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> clean_comment(text):</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>    text <span class="op">=</span> re.sub(<span class="vs">r"http</span><span class="dv">\S</span><span class="op">+</span><span class="vs">"</span>, <span class="st">""</span>, text)  <span class="co"># Remove URLs</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    text <span class="op">=</span> re.sub(<span class="vs">r"</span><span class="pp">[^A-Za-z</span><span class="dv">\s</span><span class="pp">]</span><span class="vs">"</span>, <span class="st">""</span>, text)  <span class="co"># Remove special characters</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>    text <span class="op">=</span> text.lower()</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>    words <span class="op">=</span> text.split()</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>    words <span class="op">=</span> [word <span class="cf">for</span> word <span class="kw">in</span> words <span class="cf">if</span> word <span class="kw">not</span> <span class="kw">in</span> stopwords.words(<span class="st">'english'</span>)]</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">" "</span>.join(words)</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>comments_df[<span class="st">'clean_text'</span>] <span class="op">=</span> comments_df[<span class="st">'textDisplay'</span>].astype(<span class="bu">str</span>).<span class="bu">apply</span>(clean_comment)</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>comments_df.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>&lt;&gt;:3: SyntaxWarning: invalid escape sequence '\['
+&lt;&gt;:3: SyntaxWarning: invalid escape sequence '\['
+C:\Users\user\AppData\Local\Temp\ipykernel_3160\3211246972.py:3: SyntaxWarning: invalid escape sequence '\['
+  comments_df = comments_df[~comments_df['textDisplay'].str.contains('\[deleted\]', case=False)]</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="44">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">videoId</th>
+<th data-quarto-table-cell-role="th">authorDisplayName</th>
+<th data-quarto-table-cell-role="th">textDisplay</th>
+<th data-quarto-table-cell-role="th">commentLikeCount</th>
+<th data-quarto-table-cell-role="th">commentPublishedAt</th>
+<th data-quarto-table-cell-role="th">clean_text</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>UN5qgBk6MwY</td>
+<td>@iliya-malecki</td>
+<td>Id prefer to watch a video on one of the great...</td>
+<td>0</td>
+<td>2025-06-25 23:29:49+00:00</td>
+<td>id prefer watch video one greatest minds human...</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>UN5qgBk6MwY</td>
+<td>@4D_art</td>
+<td>Grigori “Pearl”man .</td>
+<td>0</td>
+<td>2025-06-25 20:48:16+00:00</td>
+<td>grigori pearlman</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>UN5qgBk6MwY</td>
+<td>@tomorrows-med</td>
+<td>Pure genius</td>
+<td>0</td>
+<td>2025-06-25 14:04:09+00:00</td>
+<td>pure genius</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>UN5qgBk6MwY</td>
+<td>@extavwudda</td>
+<td>I am so sick of Lex sucking up to people</td>
+<td>0</td>
+<td>2025-06-25 06:08:24+00:00</td>
+<td>sick lex sucking people</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>UN5qgBk6MwY</td>
+<td>@michealvallieres9228</td>
+<td>Dude why would you interview a guy that's neve...</td>
+<td>0</td>
+<td>2025-06-23 23:40:40+00:00</td>
+<td>dude would interview guy thats never met right...</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="merge-the-datasets" class="level2">
+<h2 class="anchored" data-anchor-id="merge-the-datasets">Merge the datasets</h2>
+<p>We merge the video and comment datasets using <code>videoId</code> as the key.</p>
+<ul>
+<li><code>how="inner"</code> keeps only the records that exist in both datasets<br>
+</li>
+<li>The result (<code>merged_df</code>) combines video metadata with its related comments</li>
+</ul>
+<p>This merged dataset will be used for analysis, sentiment, and visualizations.</p>
+<div id="1acaff29-8a6f-42e4-9329-999b9442f3fb" class="cell" data-execution_count="54">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>merged_df <span class="op">=</span> pd.merge(comments_df, video_df, on<span class="op">=</span><span class="st">"videoId"</span>, how<span class="op">=</span><span class="st">"inner"</span>)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>merged_df.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="54">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">videoId</th>
+<th data-quarto-table-cell-role="th">authorDisplayName</th>
+<th data-quarto-table-cell-role="th">textDisplay</th>
+<th data-quarto-table-cell-role="th">commentLikeCount</th>
+<th data-quarto-table-cell-role="th">commentPublishedAt</th>
+<th data-quarto-table-cell-role="th">clean_text</th>
+<th data-quarto-table-cell-role="th">title</th>
+<th data-quarto-table-cell-role="th">videoPublishedAt</th>
+<th data-quarto-table-cell-role="th">viewCount</th>
+<th data-quarto-table-cell-role="th">videoLikeCount</th>
+<th data-quarto-table-cell-role="th">commentCount</th>
+<th data-quarto-table-cell-role="th">tags</th>
+<th data-quarto-table-cell-role="th">description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>UN5qgBk6MwY</td>
+<td>@iliya-malecki</td>
+<td>Id prefer to watch a video on one of the great...</td>
+<td>0</td>
+<td>2025-06-25 23:29:49+00:00</td>
+<td>id prefer watch video one greatest minds human...</td>
+<td>Terence Tao on Grigori Perelman declining the ...</td>
+<td>2025-06-19 23:23:00+00:00</td>
+<td>167222</td>
+<td>3301</td>
+<td>60</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>UN5qgBk6MwY</td>
+<td>@4D_art</td>
+<td>Grigori “Pearl”man .</td>
+<td>0</td>
+<td>2025-06-25 20:48:16+00:00</td>
+<td>grigori pearlman</td>
+<td>Terence Tao on Grigori Perelman declining the ...</td>
+<td>2025-06-19 23:23:00+00:00</td>
+<td>167222</td>
+<td>3301</td>
+<td>60</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>UN5qgBk6MwY</td>
+<td>@tomorrows-med</td>
+<td>Pure genius</td>
+<td>0</td>
+<td>2025-06-25 14:04:09+00:00</td>
+<td>pure genius</td>
+<td>Terence Tao on Grigori Perelman declining the ...</td>
+<td>2025-06-19 23:23:00+00:00</td>
+<td>167222</td>
+<td>3301</td>
+<td>60</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>UN5qgBk6MwY</td>
+<td>@extavwudda</td>
+<td>I am so sick of Lex sucking up to people</td>
+<td>0</td>
+<td>2025-06-25 06:08:24+00:00</td>
+<td>sick lex sucking people</td>
+<td>Terence Tao on Grigori Perelman declining the ...</td>
+<td>2025-06-19 23:23:00+00:00</td>
+<td>167222</td>
+<td>3301</td>
+<td>60</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>UN5qgBk6MwY</td>
+<td>@michealvallieres9228</td>
+<td>Dude why would you interview a guy that's neve...</td>
+<td>0</td>
+<td>2025-06-23 23:40:40+00:00</td>
+<td>dude would interview guy thats never met right...</td>
+<td>Terence Tao on Grigori Perelman declining the ...</td>
+<td>2025-06-19 23:23:00+00:00</td>
+<td>167222</td>
+<td>3301</td>
+<td>60</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<section id="understanding-the-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="understanding-the-dataset">Understanding the dataset</h3>
+<p>Before proceeding with the cleaning, we would like to understanding the variables deeply. This would help guide the cleaning process. The subsequent tables detail the types, meaning and values or ranges of the variables in the dataset.</p>
+<p><strong>Summary Table of the Variables in the Merged Dataset</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 7%">
+<col style="width: 39%">
+<col style="width: 37%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Type</th>
+<th>Description</th>
+<th>Values / Range (excluding NaN)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>videoId</td>
+<td>object</td>
+<td>Unique ID for each video</td>
+<td>Strings (e.g., <code>_P7S2lKif-A</code>)</td>
+</tr>
+<tr class="even">
+<td>authorDisplayName</td>
+<td>object</td>
+<td>Name of the comment author</td>
+<td>Strings (e.g., “John Doe”, “unknown”)</td>
+</tr>
+<tr class="odd">
+<td>textDisplay</td>
+<td>object</td>
+<td>Original comment text</td>
+<td>User-written text, can be long</td>
+</tr>
+<tr class="even">
+<td>commentLikeCount</td>
+<td>int</td>
+<td>Number of likes on the comment</td>
+<td>0 to hundreds</td>
+</tr>
+<tr class="odd">
+<td>commentPublishedAt</td>
+<td>datetime</td>
+<td>Date when the comment was posted</td>
+<td>2-year range (e.g., 2022–2024)</td>
+</tr>
+<tr class="even">
+<td>clean_text</td>
+<td>object</td>
+<td>Cleaned comment text (for analysis)</td>
+<td>Lowercased, punctuation-free words</td>
+</tr>
+<tr class="odd">
+<td>title</td>
+<td>object</td>
+<td>Title of the video</td>
+<td>Short strings (titles)</td>
+</tr>
+<tr class="even">
+<td>videoPublishedAt</td>
+<td>datetime</td>
+<td>Date when the video was published</td>
+<td>2-year range</td>
+</tr>
+<tr class="odd">
+<td>viewCount</td>
+<td>int</td>
+<td>Total views on the video</td>
+<td>Varies — 1,000s to millions</td>
+</tr>
+<tr class="even">
+<td>videoLikeCount</td>
+<td>int</td>
+<td>Total likes on the video</td>
+<td>Varies — 0 to hundreds of thousands</td>
+</tr>
+<tr class="odd">
+<td>commentCount</td>
+<td>int</td>
+<td>Total comments on the video</td>
+<td>0 to thousands</td>
+</tr>
+<tr class="even">
+<td>tags</td>
+<td>object</td>
+<td>Tags or keywords associated with the video</td>
+<td>Lists (e.g., [‘AI’, ‘Podcast’])</td>
+</tr>
+<tr class="odd">
+<td>description</td>
+<td>object</td>
+<td>Description of the video</td>
+<td>Text (can be multiline)</td>
+</tr>
+<tr class="even">
+<td>sentiment</td>
+<td>object</td>
+<td>Sentiment label for the comment</td>
+<td>Positive, Neutral, Negative</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="check-for-duplicate-rows" class="level3">
+<h3 class="anchored" data-anchor-id="check-for-duplicate-rows">Check for Duplicate Rows</h3>
+<p>We use <code>.duplicated().sum()</code> to count any exact duplicate rows in the merged dataset.</p>
+<ul>
+<li>Helps ensure data integrity before analysis<br>
+</li>
+<li>If duplicates exist, we may choose to remove them</li>
+</ul>
+<p>A clean dataset should have little to no duplicates.</p>
+<div id="9e7de4fe-2890-47ca-ac7c-5debe79f7a3f" class="cell" data-execution_count="56">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>merged_df.duplicated().<span class="bu">sum</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="56">
+<pre><code>0</code></pre>
+</div>
+</div>
+</section>
+<section id="check-for-missing-values-in-merged-data" class="level3">
+<h3 class="anchored" data-anchor-id="check-for-missing-values-in-merged-data">Check for Missing Values in Merged Data</h3>
+<p>We use <code>.isna().sum()</code> to identify any missing values in the merged dataset.</p>
+<ul>
+<li>Helps us detect fields that might need cleaning or filling<br>
+</li>
+<li>Ensures no important column is left incomplete before analysis</li>
+</ul>
+<p>This step ensures our final dataset is reliable and ready for insights.</p>
+<div id="411cd3e7-8a06-4f41-be36-cca752010732" class="cell" data-execution_count="58">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>merged_df.isna().<span class="bu">sum</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="58">
+<pre><code>videoId               0
+authorDisplayName     0
+textDisplay           0
+commentLikeCount      0
+commentPublishedAt    0
+clean_text            0
+title                 0
+videoPublishedAt      0
+viewCount             0
+videoLikeCount        0
+commentCount          0
+tags                  0
+description           0
+dtype: int64</code></pre>
+</div>
+</div>
+</section>
+<section id="save-cleaned-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="save-cleaned-dataset">Save Cleaned Dataset</h3>
+<p>We save the cleaned and merged dataset to a new CSV file for future analysis.</p>
+<ul>
+<li><code>os.path.join(...)</code> ensures the path works on any system<br>
+</li>
+<li><code>to_csv(..., index=False)</code> saves the file without row numbers<br>
+</li>
+<li>The final file is ready for exploratory analysis, sentiment analysis, and visualization</li>
+</ul>
+<p>Cleaned data is now safely stored and reusable.</p>
+<div id="5c64ddec-f710-4c5c-afb0-131c7b6a46ce" class="cell" data-execution_count="60">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>clean_filename <span class="op">=</span> os.path.join(processed_dir, <span class="st">"Video_Comments_DS.csv"</span>)</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>merged_df.to_csv(clean_filename, index<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Saved Video&amp;Comments. Total:"</span>, <span class="bu">len</span>(merged_df))</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Cleaned data saved to: </span><span class="sc">{</span>clean_filename<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Saved Video&amp;Comments. Total: 4682
+
+Cleaned data saved to: C:\Users\user\Documents\tekHer\YouTube-Channel-Insights\data\processed\Video_Comments_DS.csv</code></pre>
+</div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
