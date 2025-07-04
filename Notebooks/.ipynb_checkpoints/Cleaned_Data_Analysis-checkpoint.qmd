@@ -1,0 +1,121 @@
+---
+title: "YouTube Channel Data Analysis"
+subtitle: "Exploratory Data Analysis (EDA) on Lex Fridman's Channel"
+author:
+  - name: Ashura, Nadia, Aline
+    affiliation: Junior Data Analysts
+date: "2025-06-25"
+format: 
+  html:
+    page-layout: full
+    self-contained: true
+    code-fold: true
+    code-tools: true
+    code-block-bg: true
+    code-block-border-left: "#31BAE9"
+    number-sections: true
+    number-tables: true
+    toc: true
+    toc-location: left
+    toc-title: "Contents"
+jupyter: python3
+---
+
+# Introduction
+
+This report presents a data-driven analysis of the **Lex Fridman YouTube Channel**, focusing on:
+
+- Video performance: views, likes, comments, engagement
+- Comment sentiment trends
+- Frequent words used by viewers
+- Tags in high-performing content
+
+We use **Plotly Express** for interactive visualizations and **NLTK** for sentiment analysis.
+
+---
+
+# 1. Import Libraries
+
+```{python}
+import pandas as pd
+import numpy as np
+import os
+import plotly.express as px
+import nltk
+from nltk.sentiment import SentimentIntensityAnalyzer
+
+# Download VADER lexicon if needed
+nltk.download('vader_lexicon')
+```
+
+---
+
+# 2. Load and Preview Data
+
+```{python}
+# Load video and comment data
+video_data = pd.read_csv("data/videos.csv")
+comment_data = pd.read_csv("data/comments.csv")
+
+# Show first few rows
+video_data.head()
+```
+
+---
+
+# 3. Summary Statistics
+
+```{python}
+# Descriptive statistics of key numeric columns
+video_data.describe()
+```
+
+---
+
+# 4. Correlation Analysis
+
+```{python}
+# Correlation heatmap
+corr_matrix = video_data.corr(numeric_only=True)
+corr_matrix.style.background_gradient(cmap="coolwarm")
+```
+
+---
+
+# 5. Sentiment Analysis on Comments
+
+```{python}
+sia = SentimentIntensityAnalyzer()
+comment_data["sentiment"] = comment_data["text"].apply(lambda x: sia.polarity_scores(str(x))["compound"])
+comment_data[["text", "sentiment"]].head()
+```
+
+---
+
+# 6. Visualizations
+
+```{python}
+# Views vs. Likes
+px.scatter(video_data, x="likes", y="views", size="comments", color="category", title="Views vs Likes")
+
+# Sentiment distribution
+px.histogram(comment_data, x="sentiment", nbins=50, title="Distribution of Comment Sentiment")
+```
+
+---
+
+# 7. Key Findings & Recommendations
+
+- Videos with high likes-to-views ratio tend to attract more comments.
+- Positive sentiment dominates viewer comments.
+- Tags and titles should align with highly engaged videos.
+
+✅ **Recommendation**: Focus on emotionally engaging content and optimize tags for topics with high sentiment and comment frequency.
+
+---
+
+# 8. Appendix
+
+- Dataset: `data/videos.csv` and `data/comments.csv`
+- Libraries: `pandas`, `plotly`, `nltk`
+

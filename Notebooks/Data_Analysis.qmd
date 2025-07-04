@@ -1,5 +1,23 @@
 ---
 title: Data Analysis
+subtitle: Data Exploratory an Data Analysis (EDA)
+author:
+  - name: Ashura , Nadia, Aline
+    affiliation: Junior Data Analyst
+date: "2025-06-25"
+format: 
+  html:
+    page-layout: full
+    self-contained: true
+    code-fold: true
+    code-tools: true
+    code-block-bg: true
+    code-block-border-left: "#31BAE9"
+    number-sections: true
+    number-tables: true
+    toc: true
+    toc-location: left
+    toc-title: Contents
 jupyter: python3
 ---
 
@@ -242,7 +260,7 @@ for col in metrics:
     median_val = merged_df[col].median()
     std_val = merged_df[col].std()
     
-    print(f"\n📊 {col} Stats:")
+    print(f"\n . {col} Stats:")
     print(f"Mean: {mean_val:,.0f}")
     print(f"Median: {median_val:,.0f}")
     print(f"Standard Deviation: {std_val:,.0f}")
@@ -295,6 +313,8 @@ This helps identify whether video likes are generally concentrated at low, mediu
 # Likes Histogram
 fig = px.histogram(merged_df, x='videoLikeCount', nbins=50,
                     title='Distribution of Video Likes',
+                    height = 600,
+                    width=1000,
                     color_discrete_sequence=["#636EFA"])
 fig.update_traces(marker_line_color='black', marker_line_width=1)
 fig.update_layout(template='presentation',
@@ -331,6 +351,8 @@ This chart reveals viewer engagement trends through commenting behavior.
 # Comments Histogram
 fig = px.histogram(merged_df, x='commentCount', nbins=50,
                     title='Distribution of Video Comments',
+                    height = 600,
+                    width=1000,
                     color_discrete_sequence=["#636EFA"])
 fig.update_traces(marker_line_color='black', marker_line_width=1)
 fig.update_layout(template='presentation',
@@ -368,6 +390,8 @@ We analyze the emotional tone of each comment using VADER (Valence Aware Diction
 This prepares our data for sentiment distribution and trend analysis.
 
 ```{python}
+#| echo: false
+#| output: false
 # Function to assign sentiment label
 def get_sentiment(text):
     score = analyzer.polarity_scores(text)['compound']
@@ -404,6 +428,8 @@ sentiment_counts.columns = ['Sentiment', 'Proportion']
 fig = px.bar(sentiment_counts, x='Sentiment', y='Proportion',
              title='Proportion of Comment Sentiments',
              text=sentiment_counts['Proportion'].apply(lambda x: f'{x:.2%}'),
+             height = 600,
+             width=1000,
              color_discrete_sequence=["#636EFA"])
 
 # Style: transparent background + black border on bars
@@ -441,6 +467,8 @@ We analyze how the average sentiment of comments changes month by month:
 This chart shows whether audience sentiment is improving, declining, or staying consistent over time.
 
 ```{python}
+#| echo: false
+#| output: false
 # Convert commentPublishedAt
 merged_df['commentPublishedAt'] = pd.to_datetime(merged_df['commentPublishedAt'])
 
@@ -450,10 +478,17 @@ merged_df['sentiment_score'] = merged_df['clean_text'].apply(lambda text: analyz
 # Group by month
 merged_df['comment_month'] = merged_df['commentPublishedAt'].dt.to_period('M').astype(str)
 monthly_sentiment = merged_df.groupby('comment_month')['sentiment_score'].mean().reset_index()
+```
 
-# Plot
+```{python}
+#| fig-cap: "Average Comment Sentiment Over Time"
+#| fig-height: 6
+#| fig-width: 10
+# **Plot**
 fig = px.line(monthly_sentiment, x='comment_month', y='sentiment_score',
               title='Average Comment Sentiment Over Time', markers=True,
+            height=500,
+            width=1000,
               line_shape="linear")
 
 fig.update_layout(template='presentation',
@@ -558,25 +593,53 @@ This reveals which topics or keywords are most common in high-performing content
 
 ```{python}
 import ast
+from collections import Counter
+import plotly.express as px
 
-tag_counter = Counter(engaged_tags)
+# Flatten all tags into a single list
+all_tags = [tag for sublist in merged_df['tags'].apply(ast.literal_eval) for tag in sublist]
+
+# Count tag frequencies
+tag_counter = Counter(all_tags)
+
+# Convert to DataFrame
 tag_df = pd.DataFrame(tag_counter.items(), columns=['Tag', 'Count']).sort_values(by='Count', ascending=False)
 
-# Plot
-fig = px.bar(tag_df.head(15), x='Tag', y='Count',
+# Plot - improved version
+fig = px.bar(tag_df.head(15), 
+             x='Tag', 
+             y='Count',
              title='Top Tags in Most Engaged Videos (Likes + Comments)',
-             color_discrete_sequence=["#636EFA"])
+             height=600,
+             width=900,
+             color_discrete_sequence=["#636EFA"],
+             text='Count')
 
-fig.update_traces(marker_line_color='black', marker_line_width=1)
-fig.update_layout(template='presentation',
-                  xaxis_title='Tag',
-                  yaxis_title='Frequency',
-                  margin=dict(t=80, r=40, b=120),
-                  paper_bgcolor='rgba(0,0,0,0)',
-                  plot_bgcolor='rgba(0,0,0,0)')
+fig.update_traces(
+    marker_line_color='black',
+    marker_line_width=1,
+    textposition='outside',
+    textfont_size=12
+)
 
-# Show and save
+fig.update_layout(
+    template='plotly_white',
+    xaxis_title='Tag',
+    yaxis_title='Frequency',
+    margin=dict(t=80, r=40, b=150, l=60),
+    paper_bgcolor='white',
+    plot_bgcolor='white',
+    xaxis_tickangle=45,
+    font=dict(size=12, color='black'),
+    coloraxis_showscale=False
+)
+
+fig.update_xaxes(tickfont=dict(size=10))
+fig.update_yaxes(gridcolor='lightgrey')
+
 fig.show()
+
+# Optional: Save to file
 fig.write_image(os.path.join(results_dir, 'top_tags_engaged_videos.jpg'))
 fig.write_image(os.path.join(results_dir, 'top_tags_engaged_videos.png'))
 fig.write_html(os.path.join(results_dir, 'top_tags_engaged_videos.html'))
@@ -600,17 +663,21 @@ Then, we:
 This gives a clear snapshot of which videos resonated most with the audience.
 
 ```{python}
-# Calculate engagement score
-merged_df['engagement'] = merged_df['videoLikeCount'] + merged_df['commentCount']
+merged_df['Engagement'] = merged_df['videoLikeCount'] + merged_df['commentCount']
 
-# Top 10 most engaged videos
-top_engaged = merged_df.sort_values(by='engagement', ascending=False).head(10)
+# Group by video and get max engagement
+top_engaged = merged_df.groupby(['videoId', 'title'], as_index=False)['Engagement'].max()
 
-# Display the top engaged videos with their titles and engagement
-print(top_engaged[['title', 'videoLikeCount', 'commentCount', 'engagement']])
+# Sort and select top 10
+top_engaged = top_engaged.sort_values(by='Engagement', ascending=False).head(10)
 ```
 
 ```{python}
+#| fig-cap: "Top 10 Most Engaged Videos"
+#| fig-height: 6
+#| fig-width: 10
+#| warning: false
+
 # Create a short version of the title with 14 characters
 top_engaged['short_title'] = top_engaged['title'].str.slice(0, 14)
 
@@ -633,18 +700,19 @@ fig.update_layout(
     plot_bgcolor='rgba(0,0,0,0)',
     xaxis_title='Video Title (Truncated)',
     yaxis_title='Engagement',
-    margin=dict(t=80, r=40, b=200),
+    margin=dict(t=80, r=40, b=150),
     xaxis_tickangle=45
 )
 
 fig.show()
+
 
 fig.write_image(os.path.join(results_dir, 'top_10_engaged_videos.jpg'))
 fig.write_image(os.path.join(results_dir, 'top_10_engaged_videos.png'))
 fig.write_html(os.path.join(results_dir, 'top_10_engaged_videos.html'))
 ```
 
- - **Visual Observations**: "Tucker Car" and "Elon Mistle" top engagement; political figures dominate.  
+ - **Visual Observations**: "Tucker Car" is only top engagement; political figures dominate.  
 - **Contextual Meaning**: Controversial/popular figures drive disproportionate engagement.  
 
 - **Statistical Test**: Outlier detection (IQR) to flag exceptional videos.  
@@ -653,6 +721,10 @@ fig.write_html(os.path.join(results_dir, 'top_10_engaged_videos.html'))
 - **Variables**: Engagement vs. video length (not shown; potential confounder).  
 
 ```{python}
+#| fig-cap: "Top 20 Most Frequent Words in Comments"
+#| fig-height: 6
+#| fig-width: 10
+#| warning: false
 import pandas as pd
 import plotly.express as px
 
@@ -660,7 +732,8 @@ import plotly.express as px
 word_freq_df = pd.DataFrame(top_20_words.items(), columns=['Word', 'Count']).sort_values(by='Count', ascending=False)
 
 # Plot
-fig = px.bar(word_freq_df, x='Word', y='Count', title='Top 20 Most Frequent Words in Comments', color_discrete_sequence=["#636EFA"])
+fig = px.bar(word_freq_df, x='Word', y='Count', title='Top 20 Most Frequent Words in Comments', height=500,
+    width=1000, color_discrete_sequence=["#636EFA"])
 fig.update_layout(template='presentation',
                   xaxis_title='Word',
                   yaxis_title='Frequency',
