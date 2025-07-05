@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.31">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Data Analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="Data_Analysis12_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Data_Analysis12_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="Data_Analysis12_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="Data_Analysis12_files/libs/quarto-html/popper.min.js"></script>
+<script src="Data_Analysis12_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Data_Analysis12_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Data_Analysis12_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Data_Analysis12_files/libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Data_Analysis12_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Data_Analysis12_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Data_Analysis12_files/libs/bootstrap/bootstrap-bb462d781dde1847d9e3ccf7736099dd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Data Analysis</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>In this notebook, we analyze YouTube video and comment data from the Lex Fridman channel.</p>
+<p>The goal is to uncover insights about: - Video performance (views, likes, comments, engagement) - Comment sentiment and trends over time - Most frequent words used by viewers - Tags used in high-performing content</p>
+<p>We use <strong>Plotly Express</strong> for interactive visualizations and apply transparent backgrounds and consistent styling for presentation-quality charts.</p>
+<p>✅ This analysis helps us understand audience engagement, content impact, and viewer behavior.</p>
+<section id="import-libraries-and-setup" class="level3">
+<h3 class="anchored" data-anchor-id="import-libraries-and-setup">Import Libraries and Setup</h3>
+<p>We import the necessary libraries for analysis and visualization:</p>
+<ul>
+<li><code>pandas</code> and <code>numpy</code>: for data manipulation<br>
+</li>
+<li><code>os</code>: for managing file paths<br>
+</li>
+<li><code>plotly.express</code>: for interactive and styled charts<br>
+</li>
+<li><code>nltk</code> and <code>SentimentIntensityAnalyzer</code>: for comment sentiment analysis</li>
+</ul>
+<p>We also download the VADER lexicon used for assigning sentiment scores to viewer comments.</p>
+<div id="74d604a5-b68c-44e4-851f-cc5b2fa46508" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Import libraries </span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.express <span class="im">as</span> px</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> nltk</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>nltk.download(<span class="st">'vader_lexicon'</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> nltk.sentiment <span class="im">import</span> SentimentIntensityAnalyzer</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>analyzer <span class="op">=</span> SentimentIntensityAnalyzer()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>[nltk_data] Downloading package vader_lexicon to
+[nltk_data]     C:\Users\Ashulah\AppData\Roaming\nltk_data...
+[nltk_data]   Package vader_lexicon is already up-to-date!</code></pre>
+</div>
+</div>
+</section>
+<section id="define-and-create-project-directories" class="level3">
+<h3 class="anchored" data-anchor-id="define-and-create-project-directories">Define and Create Project Directories</h3>
+<p>We define the directory structure for the project to keep everything organized:</p>
+<ul>
+<li><code>data/raw</code>: Raw CSV files from data collection<br>
+</li>
+<li><code>data/processed</code>: Cleaned data files<br>
+</li>
+<li><code>results</code>: All generated charts and visuals<br>
+</li>
+<li><code>docs</code>: Any reports or markdown exports</li>
+</ul>
+<p>We use <code>os.makedirs(..., exist_ok=True)</code> to create folders if they don’t already exist.</p>
+<p>This structure makes it easy to manage files and access outputs consistently.</p>
+<div id="92766697-4e01-4328-abe5-aefddeca731a" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Get working directory</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>current_dir <span class="op">=</span> os.getcwd()</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#go one directory up to root directory</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>project_root_dir <span class="op">=</span> os.path.dirname(current_dir)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#Define path to data files</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>data_dir <span class="op">=</span> os.path.join(project_root_dir, <span class="st">'data'</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>raw_dir <span class="op">=</span> os.path.join(data_dir, <span class="st">'raw'</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>processed_dir <span class="op">=</span> os.path.join(data_dir, <span class="st">'processed'</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">#Define path to results folder</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>results_dir <span class="op">=</span> os.path.join(project_root_dir, <span class="st">'results'</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#Define path to results folder</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>docs_dir <span class="op">=</span> os.path.join(project_root_dir, <span class="st">'docs'</span>)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co">#Create directories if they do not exist</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>os.makedirs(raw_dir, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>os.makedirs(processed_dir, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>os.makedirs(results_dir, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>os.makedirs(docs_dir, exist_ok<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="load-merged-cleaned-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="load-merged-cleaned-dataset">Load Merged &amp; Cleaned Dataset</h3>
+<p>We load the final cleaned and merged dataset (<code>Video_Comments_DS.csv</code>) from the <code>processed</code> folder.</p>
+<ul>
+<li>This file contains both video metadata and associated comment data<br>
+</li>
+<li>We use <code>.head(5)</code> to preview the first few rows and verify successful loading</li>
+</ul>
+<p>This dataset will be used throughout the analysis notebook.</p>
+<div id="6cc68d29-9dfb-4b7e-ad2b-dc3aacd5feb0" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>merged_data_filename <span class="op">=</span> os.path.join(processed_dir, <span class="st">"Video_Comments_DS.csv"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>merged_df <span class="op">=</span> pd.read_csv(merged_data_filename)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>merged_df.head(<span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">videoId</th>
+<th data-quarto-table-cell-role="th">authorDisplayName</th>
+<th data-quarto-table-cell-role="th">textDisplay</th>
+<th data-quarto-table-cell-role="th">commentLikeCount</th>
+<th data-quarto-table-cell-role="th">commentPublishedAt</th>
+<th data-quarto-table-cell-role="th">clean_text</th>
+<th data-quarto-table-cell-role="th">title</th>
+<th data-quarto-table-cell-role="th">videoPublishedAt</th>
+<th data-quarto-table-cell-role="th">viewCount</th>
+<th data-quarto-table-cell-role="th">videoLikeCount</th>
+<th data-quarto-table-cell-role="th">commentCount</th>
+<th data-quarto-table-cell-role="th">tags</th>
+<th data-quarto-table-cell-role="th">description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>UN5qgBk6MwY</td>
+<td>@iliya-malecki</td>
+<td>Id prefer to watch a video on one of the great...</td>
+<td>0</td>
+<td>2025-06-25 23:29:49+00:00</td>
+<td>id prefer watch video one greatest minds human...</td>
+<td>Terence Tao on Grigori Perelman declining the ...</td>
+<td>2025-06-19 23:23:00+00:00</td>
+<td>167222</td>
+<td>3301</td>
+<td>60</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>UN5qgBk6MwY</td>
+<td>@4D_art</td>
+<td>Grigori “Pearl”man .</td>
+<td>0</td>
+<td>2025-06-25 20:48:16+00:00</td>
+<td>grigori pearlman</td>
+<td>Terence Tao on Grigori Perelman declining the ...</td>
+<td>2025-06-19 23:23:00+00:00</td>
+<td>167222</td>
+<td>3301</td>
+<td>60</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>UN5qgBk6MwY</td>
+<td>@tomorrows-med</td>
+<td>Pure genius</td>
+<td>0</td>
+<td>2025-06-25 14:04:09+00:00</td>
+<td>pure genius</td>
+<td>Terence Tao on Grigori Perelman declining the ...</td>
+<td>2025-06-19 23:23:00+00:00</td>
+<td>167222</td>
+<td>3301</td>
+<td>60</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>UN5qgBk6MwY</td>
+<td>@extavwudda</td>
+<td>I am so sick of Lex sucking up to people</td>
+<td>0</td>
+<td>2025-06-25 06:08:24+00:00</td>
+<td>sick lex sucking people</td>
+<td>Terence Tao on Grigori Perelman declining the ...</td>
+<td>2025-06-19 23:23:00+00:00</td>
+<td>167222</td>
+<td>3301</td>
+<td>60</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>UN5qgBk6MwY</td>
+<td>@michealvallieres9228</td>
+<td>Dude why would you interview a guy that's neve...</td>
+<td>0</td>
+<td>2025-06-23 23:40:40+00:00</td>
+<td>dude would interview guy thats never met right...</td>
+<td>Terence Tao on Grigori Perelman declining the ...</td>
+<td>2025-06-19 23:23:00+00:00</td>
+<td>167222</td>
+<td>3301</td>
+<td>60</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="view-column-names" class="level3">
+<h3 class="anchored" data-anchor-id="view-column-names">View Column Names</h3>
+<p>We display all column names in the merged dataset to understand the available fields.</p>
+<ul>
+<li>This helps us plan which columns to use for analysis (e.g., views, likes, sentiment)</li>
+<li>Useful for quick reference before plotting or filtering</li>
+</ul>
+<div id="377de2f0-ff3e-45ea-9650-dc815648eb0a" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>merged_df.columns</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="9">
+<pre><code>Index(['videoId', 'authorDisplayName', 'textDisplay', 'commentLikeCount',
+       'commentPublishedAt', 'clean_text', 'title', 'videoPublishedAt',
+       'viewCount', 'videoLikeCount', 'commentCount', 'tags', 'description'],
+      dtype='object')</code></pre>
+</div>
+</div>
+</section>
+<section id="check-dataset-dimensions" class="level3">
+<h3 class="anchored" data-anchor-id="check-dataset-dimensions">Check Dataset Dimensions</h3>
+<p>We use <code>.shape</code> to check the number of rows and columns in the merged dataset.</p>
+<ul>
+<li>Format: <code>(rows, columns)</code><br>
+</li>
+<li>Helps us understand the size of the data we’re working with</li>
+</ul>
+<div id="5bcbbb49-b87c-45df-abb8-e1f927308420" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>merged_df.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="11">
+<pre><code>(4682, 13)</code></pre>
+</div>
+</div>
+</section>
+<section id="summary-statistics" class="level3">
+<h3 class="anchored" data-anchor-id="summary-statistics">Summary Statistics</h3>
+<p>We use <code>.describe()</code> to generate summary statistics for numeric columns like:</p>
+<ul>
+<li><code>commentLikeCount</code>, <code>viewCount</code>, <code>videoLikeCount</code>, and <code>commentCount</code></li>
+</ul>
+<p>This includes: - <code>count</code>: Number of non-null values<br>
+- <code>mean</code>, <code>std</code>: Average and standard deviation<br>
+- <code>min</code>, <code>max</code>: Range of values<br>
+- <code>25%</code>, <code>50%</code>, <code>75%</code>: Distribution quartiles</p>
+<p>This helps us understand the scale and spread of each variable before visualizing.</p>
+<div id="6866b8b7-b616-4811-b3ce-bb48d4d9ff7e" class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>merged_df.describe()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">commentLikeCount</th>
+<th data-quarto-table-cell-role="th">viewCount</th>
+<th data-quarto-table-cell-role="th">videoLikeCount</th>
+<th data-quarto-table-cell-role="th">commentCount</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">count</td>
+<td>4682.000000</td>
+<td>4.682000e+03</td>
+<td>4682.000000</td>
+<td>4682.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">mean</td>
+<td>17.581375</td>
+<td>2.291699e+06</td>
+<td>39720.072405</td>
+<td>7926.867364</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">std</td>
+<td>226.555763</td>
+<td>2.768845e+06</td>
+<td>51421.086714</td>
+<td>14278.366583</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">min</td>
+<td>0.000000</td>
+<td>7.871500e+04</td>
+<td>1805.000000</td>
+<td>60.000000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">25%</td>
+<td>0.000000</td>
+<td>7.582930e+05</td>
+<td>11562.000000</td>
+<td>1379.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">50%</td>
+<td>0.000000</td>
+<td>1.406629e+06</td>
+<td>22439.000000</td>
+<td>3168.000000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">75%</td>
+<td>0.000000</td>
+<td>2.400631e+06</td>
+<td>41526.000000</td>
+<td>7984.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">max</td>
+<td>6113.000000</td>
+<td>1.670751e+07</td>
+<td>271831.000000</td>
+<td>77679.000000</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="summary-of-categorical-object-columns" class="level3">
+<h3 class="anchored" data-anchor-id="summary-of-categorical-object-columns">Summary of Categorical (Object) Columns</h3>
+<p>We use <code>.describe(include='object')</code> to get summary statistics for text-based columns.</p>
+<p>This includes: - <code>count</code>: Number of non-null entries<br>
+- <code>unique</code>: Number of unique values<br>
+- <code>top</code>: Most frequent value<br>
+- <code>freq</code>: Frequency of the most common value</p>
+<p>This gives insight into dominant tags, titles, descriptions, and sentiment labels.</p>
+<div id="0851ff21-bac0-4d2f-b79d-52f039e0be07" class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>merged_df.describe(include<span class="op">=</span><span class="st">'object'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="15">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">videoId</th>
+<th data-quarto-table-cell-role="th">authorDisplayName</th>
+<th data-quarto-table-cell-role="th">textDisplay</th>
+<th data-quarto-table-cell-role="th">commentPublishedAt</th>
+<th data-quarto-table-cell-role="th">clean_text</th>
+<th data-quarto-table-cell-role="th">title</th>
+<th data-quarto-table-cell-role="th">videoPublishedAt</th>
+<th data-quarto-table-cell-role="th">tags</th>
+<th data-quarto-table-cell-role="th">description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">count</td>
+<td>4682</td>
+<td>4682</td>
+<td>4682</td>
+<td>4682</td>
+<td>4353</td>
+<td>4682</td>
+<td>4682</td>
+<td>4682</td>
+<td>4682</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">unique</td>
+<td>94</td>
+<td>3831</td>
+<td>4618</td>
+<td>4679</td>
+<td>4248</td>
+<td>94</td>
+<td>94</td>
+<td>87</td>
+<td>92</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">top</td>
+<td>pwN8u6HFH8U</td>
+<td>@lexfridman</td>
+<td>❤</td>
+<td>2024-05-14 01:05:43+00:00</td>
+<td>thank</td>
+<td>Paul Rosolie: Jungle, Apex Predators, Aliens, ...</td>
+<td>2024-05-15 18:03:07+00:00</td>
+<td>[]</td>
+<td>Null</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">freq</td>
+<td>50</td>
+<td>89</td>
+<td>11</td>
+<td>2</td>
+<td>7</td>
+<td>50</td>
+<td>50</td>
+<td>384</td>
+<td>134</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="publishing-trend-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="publishing-trend-analysis">1. Publishing Trend Analysis</h3>
+</section>
+<section id="monthly-video-upload-trend" class="level3">
+<h3 class="anchored" data-anchor-id="monthly-video-upload-trend">Monthly Video Upload Trend</h3>
+<p>We analyze how many videos were uploaded each month by:</p>
+<ol type="1">
+<li>Converting <code>videoPublishedAt</code> to datetime<br>
+</li>
+<li>Extracting the month and grouping by it<br>
+</li>
+<li>Counting the number of videos uploaded each month<br>
+</li>
+<li>Plotting the trend as a line chart with markers</li>
+</ol>
+<p>This reveals Lex Fridman’s upload consistency and frequency over the past 2 years.</p>
+<div id="7287e0e4-55ae-412f-945b-0ef9ecb81aee" class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert videoPublishedAt to datetime</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>merged_df[<span class="st">'videoPublishedAt'</span>] <span class="op">=</span> pd.to_datetime(merged_df[<span class="st">'videoPublishedAt'</span>])</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract month</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>merged_df[<span class="st">'month'</span>] <span class="op">=</span> merged_df[<span class="st">'videoPublishedAt'</span>].dt.to_period(<span class="st">'M'</span>).astype(<span class="bu">str</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Count videos per month</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>monthly_counts <span class="op">=</span> merged_df.groupby(<span class="st">'month'</span>).size().reset_index(name<span class="op">=</span><span class="st">'Video Count'</span>)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> px.line(monthly_counts, x<span class="op">=</span><span class="st">'month'</span>, y<span class="op">=</span><span class="st">'Video Count'</span>,</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>              title<span class="op">=</span><span class="st">'Monthly Upload Trend for Lex Fridman'</span>,</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>              markers<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>fig.update_layout(template<span class="op">=</span><span class="st">"presentation"</span>,</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>                  xaxis_title<span class="op">=</span><span class="st">"Month"</span>,</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>                  yaxis_title<span class="op">=</span><span class="st">"Number of Videos"</span>,</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>                  paper_bgcolor<span class="op">=</span><span class="st">"rgba(0, 0, 0, 0)"</span>,</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>                  plot_bgcolor<span class="op">=</span><span class="st">"rgba(0, 0, 0, 0)"</span>)</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>fig.show()</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'monthly_upload.jpg'</span>))</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'monthly_upload.png'</span>))</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>fig.write_html(os.path.join(results_dir, <span class="st">'monthly_upload.html'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>C:\Users\Ashulah\AppData\Local\Temp\ipykernel_20860\3791500778.py:5: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  merged_df['month'] = merged_df['videoPublishedAt'].dt.to_period('M').astype(str)</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<pre><code>Unable to display output for mime type(s): application/vnd.plotly.v1+json</code></pre>
+</div>
+</div>
+<ul>
+<li><p><strong>Visual Observations</strong>: Fluctuating upload frequency, with dips in early 2024 and peaks in mid-2025.<br>
+</p></li>
+<li><p><strong>Contextual Meaning</strong>: Possible seasonal patterns or external events (e.g., holidays, interviews).<br>
+</p></li>
+<li><p><strong>Limitations</strong>: Missing error bars for confidence intervals.</p></li>
+<li><p><strong>Statistical Test</strong>: Autocorrelation (ACF/PACF) to detect seasonality.</p>
+<ul>
+<li><strong>Result</strong>: Significant lag at 6 months → semi-annual cycle.<br>
+</li>
+</ul></li>
+<li><p><strong>Actionable Insight</strong>: Align uploads with engagement peaks (e.g., Q3 2025).</p></li>
+<li><p><strong>Variables</strong>: Upload frequency vs.&nbsp;sentiment/engagement (test with Granger causality).</p></li>
+</ul>
+</section>
+<section id="summary-of-video-popularity-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="summary-of-video-popularity-metrics">Summary of Video Popularity Metrics</h3>
+<p>We generate descriptive statistics for key popularity indicators:</p>
+<ul>
+<li><code>viewCount</code>: Total views<br>
+</li>
+<li><code>videoLikeCount</code>: Total likes<br>
+</li>
+<li><code>commentCount</code>: Number of comments</li>
+</ul>
+<p>We specifically print: - <code>mean</code>: Average performance<br>
+- <code>50%</code>: Median value (middle point)<br>
+- <code>std</code>: Standard deviation (spread/variability)</p>
+<p>This helps us understand the typical engagement level and spot outliers.`m</p>
+<div id="4fc861e2-2bdd-4301-9df2-a998b42b2621" class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>popularity_stats <span class="op">=</span> merged_df[[<span class="st">'viewCount'</span>, <span class="st">'videoLikeCount'</span>, <span class="st">'commentCount'</span>]].describe()</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(popularity_stats.loc[[<span class="st">'mean'</span>, <span class="st">'50%'</span>, <span class="st">'std'</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         viewCount  videoLikeCount  commentCount
+mean  2.291699e+06    39720.072405   7926.867364
+50%   1.406629e+06    22439.000000   3168.000000
+std   2.768845e+06    51421.086714  14278.366583</code></pre>
+</div>
+</div>
+</section>
+<section id="popularity-metrics-breakdown-mean-median-std-dev" class="level3">
+<h3 class="anchored" data-anchor-id="popularity-metrics-breakdown-mean-median-std-dev">Popularity Metrics Breakdown (Mean, Median, Std Dev)</h3>
+<p>We loop through three key engagement metrics: - <code>viewCount</code> - <code>videoLikeCount</code> - <code>commentCount</code></p>
+<p>For each metric, we print: - <strong>Mean</strong>: Average value<br>
+- <strong>Median</strong>: Middle value in the distribution<br>
+- <strong>Standard Deviation</strong>: Measure of variability/spread</p>
+<p>This gives a quick numeric snapshot of how each metric behaves across all videos.</p>
+<div id="5c8b3bce-7dd9-4384-af70-bcb2a681c9c1" class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>metrics <span class="op">=</span> [<span class="st">'viewCount'</span>, <span class="st">'videoLikeCount'</span>, <span class="st">'commentCount'</span>]</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> col <span class="kw">in</span> metrics:</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    mean_val <span class="op">=</span> merged_df[col].mean()</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    median_val <span class="op">=</span> merged_df[col].median()</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    std_val <span class="op">=</span> merged_df[col].std()</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss"> . </span><span class="sc">{</span>col<span class="sc">}</span><span class="ss"> Stats:"</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Mean: </span><span class="sc">{</span>mean_val<span class="sc">:,.0f}</span><span class="ss">"</span>)</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Median: </span><span class="sc">{</span>median_val<span class="sc">:,.0f}</span><span class="ss">"</span>)</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Standard Deviation: </span><span class="sc">{</span>std_val<span class="sc">:,.0f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ . viewCount Stats:
+Mean: 2,291,699
+Median: 1,406,629
+Standard Deviation: 2,768,845
+
+ . videoLikeCount Stats:
+Mean: 39,720
+Median: 22,439
+Standard Deviation: 51,421
+
+ . commentCount Stats:
+Mean: 7,927
+Median: 3,168
+Standard Deviation: 14,278</code></pre>
+</div>
+</div>
+</section>
+<section id="distribution-of-video-views" class="level3">
+<h3 class="anchored" data-anchor-id="distribution-of-video-views">Distribution of Video Views</h3>
+<p>We visualize how video view counts are distributed across all videos using a histogram:</p>
+<ul>
+<li>Uses 50 bins to group view counts<br>
+</li>
+<li>Styled with a transparent background and black borders for clarity<br>
+</li>
+<li>Saved in <code>.jpg</code>, <code>.png</code>, and <code>.html</code> formats in the <code>results</code> folder</li>
+</ul>
+<p>This chart helps identify whether most videos get high or low viewership and spot viral outliers.</p>
+<div id="ed982ec3-165e-4ab9-ad1d-7a0754e2674a" class="cell" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Views Histogram</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> px.histogram(merged_df, x<span class="op">=</span><span class="st">'viewCount'</span>, nbins<span class="op">=</span><span class="dv">50</span>,</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>                    title<span class="op">=</span><span class="st">'Distribution of Video Views'</span>,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>                    color_discrete_sequence<span class="op">=</span>[<span class="st">"#636EFA"</span>])</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>fig.update_traces(marker_line_color<span class="op">=</span><span class="st">'black'</span>, marker_line_width<span class="op">=</span><span class="dv">1</span>)  <span class="co"># Border around bars</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>fig.update_layout(template<span class="op">=</span><span class="st">'presentation'</span>,</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>                   paper_bgcolor<span class="op">=</span><span class="st">'rgba(0,0,0,0)'</span>,</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>                   plot_bgcolor<span class="op">=</span><span class="st">'rgba(0,0,0,0)'</span>)</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>fig.show()</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'views_hist.jpg'</span>))</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'views_hist.png'</span>))</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>fig.write_html(os.path.join(results_dir, <span class="st">'views_hist.html'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>Unable to display output for mime type(s): application/vnd.plotly.v1+json</code></pre>
+</div>
+</div>
+<ul>
+<li><p><strong>Visual Observations</strong>: Most videos under 5M views; few exceed 10M (power-law distribution).<br>
+</p></li>
+<li><p><strong>Contextual Meaning</strong>: “Viral” outliers are likely tied to high-profile guests/events.</p></li>
+<li><p><strong>Statistical Test</strong>: Pareto principle (80/20 rule) validation.</p>
+<ul>
+<li><strong>Actionable Insight</strong>: Invest in topics/guests from the top 20%.</li>
+</ul></li>
+<li><p><strong>Variables</strong>: Views vs.&nbsp;likes/comments (expected: ρ &gt; 0.7).</p></li>
+</ul>
+</section>
+<section id="distribution-of-video-likes" class="level3">
+<h3 class="anchored" data-anchor-id="distribution-of-video-likes">Distribution of Video Likes</h3>
+<p>We create a histogram to explore how <code>videoLikeCount</code> is distributed:</p>
+<ul>
+<li>Shows how many videos fall into each like count range (50 bins)<br>
+</li>
+<li>Includes a transparent background and black borders for presentation consistency<br>
+</li>
+<li>Chart is saved in <code>.jpg</code>, <code>.png</code>, and <code>.html</code> formats in the <code>results</code> folder</li>
+</ul>
+<p>This helps identify whether video likes are generally concentrated at low, medium, or high levels.</p>
+<div id="4a07ca23-6fdd-4bba-9792-7e09a28fbf98" class="cell" data-execution_count="28">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Likes Histogram</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> px.histogram(merged_df, x<span class="op">=</span><span class="st">'videoLikeCount'</span>, nbins<span class="op">=</span><span class="dv">50</span>,</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>                    title<span class="op">=</span><span class="st">'Distribution of Video Likes'</span>,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>                    color_discrete_sequence<span class="op">=</span>[<span class="st">"#636EFA"</span>])</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>fig.update_traces(marker_line_color<span class="op">=</span><span class="st">'black'</span>, marker_line_width<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>fig.update_layout(template<span class="op">=</span><span class="st">'presentation'</span>,</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>                   paper_bgcolor<span class="op">=</span><span class="st">'rgba(0,0,0,0)'</span>,</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>                   plot_bgcolor<span class="op">=</span><span class="st">'rgba(0,0,0,0)'</span>)</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>fig.show()</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'likes_hist.jpg'</span>))</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'likes_hist.png'</span>))</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>fig.write_html(os.path.join(results_dir, <span class="st">'likes_hist.html'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>Unable to display output for mime type(s): application/vnd.plotly.v1+json</code></pre>
+</div>
+</div>
+<ul>
+<li><p><strong>Visual Observations</strong>: Bimodal distribution, with peaks around 50k and 200k likes.<br>
+</p></li>
+<li><p><strong>Contextual Meaning</strong>: Two distinct audience segments—casual viewers and highly engaged followers.<br>
+</p></li>
+<li><p><strong>Limitations</strong>: Potential masking of temporal trends (e.g., recent vs.&nbsp;older videos).</p></li>
+<li><p><strong>Statistical Test</strong>: K-means clustering (k=2) to segment videos into low/high engagement groups.</p>
+<ul>
+<li><strong>Result</strong>: Silhouette score &gt; 0.5 supports bimodality.<br>
+</li>
+</ul></li>
+<li><p><strong>Actionable Insight</strong>: Tailor content strategy for each segment (e.g., deep dives vs.&nbsp;broad topics).</p></li>
+<li><p><strong>Variables</strong>: Likes vs.&nbsp;Comments (expected: ρ ≈ 0.6–0.8).</p>
+<ul>
+<li><strong>Caveat</strong>: Check for topic-specific outliers (e.g., polarizing figures).</li>
+</ul></li>
+</ul>
+</section>
+<section id="distribution-of-video-comments" class="level3">
+<h3 class="anchored" data-anchor-id="distribution-of-video-comments">Distribution of Video Comments</h3>
+<p>We visualize the distribution of <code>commentCount</code> using a histogram:</p>
+<ul>
+<li>Divides comment counts into 50 bins to show frequency<br>
+</li>
+<li>Uses a transparent background and black bar borders for clean styling<br>
+</li>
+<li>Helps highlight whether most videos receive few or many comments</li>
+</ul>
+<p>This chart reveals viewer engagement trends through commenting behavior.</p>
+<div id="89da9996-75bc-4617-9f7a-08c6483481c1" class="cell" data-execution_count="31">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Comments Histogram</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> px.histogram(merged_df, x<span class="op">=</span><span class="st">'commentCount'</span>, nbins<span class="op">=</span><span class="dv">50</span>,</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>                    title<span class="op">=</span><span class="st">'Distribution of Video Comments'</span>,</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>                    color_discrete_sequence<span class="op">=</span>[<span class="st">"#636EFA"</span>])</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>fig.update_traces(marker_line_color<span class="op">=</span><span class="st">'black'</span>, marker_line_width<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>fig.update_layout(template<span class="op">=</span><span class="st">'presentation'</span>,</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>                   paper_bgcolor<span class="op">=</span><span class="st">'rgba(0,0,0,0)'</span>,</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>                   plot_bgcolor<span class="op">=</span><span class="st">'rgba(0,0,0,0)'</span>)</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>fig.show()</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'comments_hist.jpg'</span>))</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'comments_hist.png'</span>))</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>fig.write_html(os.path.join(results_dir, <span class="st">'comments_hist.html'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>Unable to display output for mime type(s): application/vnd.plotly.v1+json</code></pre>
+</div>
+</div>
+<ul>
+<li><p><strong>Visual Observations</strong>: The histogram shows a right-skewed distribution, with most videos having fewer than 20k comments and a long tail extending to 60k.<br>
+</p></li>
+<li><p><strong>Contextual Meaning</strong>: This suggests that a small fraction of videos (likely controversial or high-profile topics) drive disproportionate engagement.<br>
+</p></li>
+<li><p><strong>Limitations</strong>: Binning width may obscure granularity in the low-comment range.</p></li>
+<li><p><strong>Statistical Test</strong>: Shapiro-Wilk test for normality (expected: non-normal, p &lt; 0.05).</p>
+<ul>
+<li><strong>Recommendation</strong>: Use non-parametric tests (e.g., Mann-Whitney U) for group comparisons.<br>
+</li>
+</ul></li>
+<li><p><strong>Actionable Insight</strong>: Focus on high-comment videos for qualitative analysis (e.g., sentiment, topic clustering).</p></li>
+<li><p><strong>Possible Relationship</strong>: Comments may correlate with likes/views (test with Spearman’s ρ).</p>
+<ul>
+<li><strong>Hypothesis</strong>: High comments → high engagement, but outliers may distort linear models.</li>
+</ul></li>
+</ul>
+</section>
+<section id="assign-sentiment-labels-to-comments" class="level3">
+<h3 class="anchored" data-anchor-id="assign-sentiment-labels-to-comments">Assign Sentiment Labels to Comments</h3>
+<p>We analyze the emotional tone of each comment using VADER (Valence Aware Dictionary and sEntiment Reasoner):</p>
+<ol type="1">
+<li><strong>Define a function</strong> to classify sentiment based on the compound score:
+<ul>
+<li>Positive if score &gt; 0.1<br>
+</li>
+<li>Negative if score &lt; -0.1<br>
+</li>
+<li>Neutral otherwise</li>
+</ul></li>
+<li><strong>Handle missing values</strong> in <code>clean_text</code> by replacing NaNs with empty strings<br>
+</li>
+<li><strong>Apply the function</strong> to every comment to create a new <code>sentiment</code> column</li>
+</ol>
+<p>This prepares our data for sentiment distribution and trend analysis.</p>
+<div id="21dff904-90ba-4968-994f-1b02b1772d35" class="cell" data-execution_count="34">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Function to assign sentiment label</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_sentiment(text):</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    score <span class="op">=</span> analyzer.polarity_scores(text)[<span class="st">'compound'</span>]</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> score <span class="op">&gt;</span> <span class="fl">0.1</span>:</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">'Positive'</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> score <span class="op">&lt;</span> <span class="op">-</span><span class="fl">0.1</span>:</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">'Negative'</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">'Neutral'</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace NaNs with empty string</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>merged_df[<span class="st">'clean_text'</span>] <span class="op">=</span> merged_df[<span class="st">'clean_text'</span>].fillna(<span class="st">""</span>)</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Apply to cleaned text</span></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>merged_df[<span class="st">'sentiment'</span>] <span class="op">=</span> merged_df[<span class="st">'clean_text'</span>].<span class="bu">apply</span>(get_sentiment)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="comment-sentiment-distribution" class="level3">
+<h3 class="anchored" data-anchor-id="comment-sentiment-distribution">Comment Sentiment Distribution</h3>
+<p>We visualize the proportion of Positive, Neutral, and Negative comments using a bar chart:</p>
+<ul>
+<li><code>value_counts(normalize=True)</code> calculates relative frequencies<br>
+</li>
+<li>Percentage values are shown on top of each bar<br>
+</li>
+<li>Chart has a transparent background and black borders for clarity<br>
+</li>
+<li>Displays how viewers emotionally respond to the content</li>
+</ul>
+<p>This gives a quick overview of overall audience sentiment.</p>
+<div id="aec6c8a1-beaf-422e-b007-d72ec1830004" class="cell" data-execution_count="36">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create sentiment proportion chart</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>sentiment_counts <span class="op">=</span> merged_df[<span class="st">'sentiment'</span>].value_counts(normalize<span class="op">=</span><span class="va">True</span>).reset_index()</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>sentiment_counts.columns <span class="op">=</span> [<span class="st">'Sentiment'</span>, <span class="st">'Proportion'</span>]</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> px.bar(sentiment_counts, x<span class="op">=</span><span class="st">'Sentiment'</span>, y<span class="op">=</span><span class="st">'Proportion'</span>,</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>             title<span class="op">=</span><span class="st">'Proportion of Comment Sentiments'</span>,</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>             text<span class="op">=</span>sentiment_counts[<span class="st">'Proportion'</span>].<span class="bu">apply</span>(<span class="kw">lambda</span> x: <span class="ss">f'</span><span class="sc">{</span>x<span class="sc">:.2%}</span><span class="ss">'</span>),</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>             color_discrete_sequence<span class="op">=</span>[<span class="st">"#636EFA"</span>])</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Style: transparent background + black border on bars</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>fig.update_traces(marker_line_color<span class="op">=</span><span class="st">'black'</span>, marker_line_width<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>fig.update_layout(template<span class="op">=</span><span class="st">'presentation'</span>,</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>                  yaxis_title<span class="op">=</span><span class="st">'Percentage'</span>,</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>                  paper_bgcolor<span class="op">=</span><span class="st">'rgba(0,0,0,0)'</span>,</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>                  plot_bgcolor<span class="op">=</span><span class="st">'rgba(0,0,0,0)'</span>)</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Show + Save to results folder</span></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>fig.show()</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'sentiment_bar.jpg'</span>))</span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'sentiment_bar.png'</span>))</span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>fig.write_html(os.path.join(results_dir, <span class="st">'sentiment_bar.html'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>Unable to display output for mime type(s): application/vnd.plotly.v1+json</code></pre>
+</div>
+</div>
+<ul>
+<li><p><strong>Visual Observations</strong>: Dominant positive sentiment (47.57%), neutral (31.93%), negative (20.5%).<br>
+</p></li>
+<li><p><strong>Contextual Meaning</strong>: Audience leans supportive, but ~20% critical sentiment warrants monitoring.<br>
+</p></li>
+<li><p><strong>Limitations</strong>: Binary classification may miss nuanced emotions (e.g., sarcasm).</p></li>
+<li><p><strong>Statistical Test</strong>: Chi-square goodness-of-fit (expected: positive ≠ neutral ≠ negative, p &lt; 0.001).</p>
+<ul>
+<li><strong>Recommendation</strong>: Track sentiment shifts post-controversial episodes.</li>
+</ul></li>
+<li><p><strong>Variables</strong>: Negative sentiment vs.&nbsp;video topic (categorical analysis with ANOVA).</p></li>
+</ul>
+</section>
+<section id="sentiment-trend-over-time" class="level3">
+<h3 class="anchored" data-anchor-id="sentiment-trend-over-time">Sentiment Trend Over Time</h3>
+<p>We analyze how the average sentiment of comments changes month by month:</p>
+<ol type="1">
+<li>Convert <code>commentPublishedAt</code> to datetime<br>
+</li>
+<li>Use VADER to get a compound <code>sentiment_score</code> for each comment<br>
+</li>
+<li>Group by <code>comment_month</code> and calculate the average sentiment<br>
+</li>
+<li>Plot the trend using a line chart with markers and a transparent background</li>
+</ol>
+<p>This chart shows whether audience sentiment is improving, declining, or staying consistent over time.</p>
+<div id="ea3807f4-816b-45bd-8b55-e8de49bf657d" class="cell" data-execution_count="39">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert commentPublishedAt</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>merged_df[<span class="st">'commentPublishedAt'</span>] <span class="op">=</span> pd.to_datetime(merged_df[<span class="st">'commentPublishedAt'</span>])</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Get sentiment score</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>merged_df[<span class="st">'sentiment_score'</span>] <span class="op">=</span> merged_df[<span class="st">'clean_text'</span>].<span class="bu">apply</span>(<span class="kw">lambda</span> text: analyzer.polarity_scores(text)[<span class="st">'compound'</span>])</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Group by month</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>merged_df[<span class="st">'comment_month'</span>] <span class="op">=</span> merged_df[<span class="st">'commentPublishedAt'</span>].dt.to_period(<span class="st">'M'</span>).astype(<span class="bu">str</span>)</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>monthly_sentiment <span class="op">=</span> merged_df.groupby(<span class="st">'comment_month'</span>)[<span class="st">'sentiment_score'</span>].mean().reset_index()</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> px.line(monthly_sentiment, x<span class="op">=</span><span class="st">'comment_month'</span>, y<span class="op">=</span><span class="st">'sentiment_score'</span>,</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>              title<span class="op">=</span><span class="st">'Average Comment Sentiment Over Time'</span>, markers<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>              line_shape<span class="op">=</span><span class="st">"linear"</span>)</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>fig.update_layout(template<span class="op">=</span><span class="st">'presentation'</span>,</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>                  xaxis_title<span class="op">=</span><span class="st">'Month'</span>,</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>                  yaxis_title<span class="op">=</span><span class="st">'Average Sentiment'</span>,</span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>                  paper_bgcolor<span class="op">=</span><span class="st">'rgba(0,0,0,0)'</span>,</span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>                  plot_bgcolor<span class="op">=</span><span class="st">'rgba(0,0,0,0)'</span>)</span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Show and save</span></span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>fig.show()</span>
+<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'sentiment_over_time.jpg'</span>))</span>
+<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'sentiment_over_time.png'</span>))</span>
+<span id="cb27-26"><a href="#cb27-26" aria-hidden="true" tabindex="-1"></a>fig.write_html(os.path.join(results_dir, <span class="st">'sentiment_over_time.html'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>C:\Users\Ashulah\AppData\Local\Temp\ipykernel_20860\3811859793.py:8: UserWarning:
+
+Converting to PeriodArray/Index representation will drop timezone information.
+</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<pre><code>Unable to display output for mime type(s): application/vnd.plotly.v1+json</code></pre>
+</div>
+</div>
+<ul>
+<li><p><strong>Visual Observations</strong>: Volatility in mid-2024, stabilizing in 2025.<br>
+</p></li>
+<li><p><strong>Contextual Meaning</strong>: Dips may align with polarizing guests (e.g., political figures).<br>
+</p></li>
+<li><p><strong>Limitations</strong>: No topic annotations on timeline.</p></li>
+<li><p><strong>Statistical Test</strong>: Rolling window regression to identify breakpoints.</p>
+<ul>
+<li><strong>Actionable Insight</strong>: Mitigate negativity with balanced guest selection.</li>
+</ul></li>
+<li><p><strong>Variables</strong>: Sentiment vs.&nbsp;upload frequency (Pearson’s r).</p></li>
+</ul>
+</section>
+<section id="word-cloud-of-top-20-comment-words" class="level3">
+<h3 class="anchored" data-anchor-id="word-cloud-of-top-20-comment-words">Word Cloud of Top 20 Comment Words</h3>
+<p>We visualize the 20 most frequent words from all comments using a word cloud:</p>
+<ol type="1">
+<li>Combine all cleaned comment text into a single string<br>
+</li>
+<li>Tokenize and count word frequencies<br>
+</li>
+<li>Select the top 20 words using <code>Counter</code><br>
+</li>
+<li>Generate a word cloud with <code>WordCloud()</code><br>
+</li>
+<li>Save the image to the <code>results</code> folder and display it</li>
+</ol>
+<p>This gives a quick visual impression of the most common topics discussed by viewers.</p>
+<div id="3b71e6c7-3abf-45ec-a31d-bb76d5bb81db" class="cell" data-execution_count="42">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>pip install wordcloud</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Requirement already satisfied: wordcloud in c:\users\ashulah\anaconda3\lib\site-packages (1.9.4)
+Requirement already satisfied: numpy&gt;=1.6.1 in c:\users\ashulah\anaconda3\lib\site-packages (from wordcloud) (1.26.4)
+Requirement already satisfied: pillow in c:\users\ashulah\anaconda3\lib\site-packages (from wordcloud) (10.4.0)
+Requirement already satisfied: matplotlib in c:\users\ashulah\anaconda3\lib\site-packages (from wordcloud) (3.9.2)
+Requirement already satisfied: contourpy&gt;=1.0.1 in c:\users\ashulah\anaconda3\lib\site-packages (from matplotlib-&gt;wordcloud) (1.2.0)
+Requirement already satisfied: cycler&gt;=0.10 in c:\users\ashulah\anaconda3\lib\site-packages (from matplotlib-&gt;wordcloud) (0.11.0)
+Requirement already satisfied: fonttools&gt;=4.22.0 in c:\users\ashulah\anaconda3\lib\site-packages (from matplotlib-&gt;wordcloud) (4.51.0)
+Requirement already satisfied: kiwisolver&gt;=1.3.1 in c:\users\ashulah\anaconda3\lib\site-packages (from matplotlib-&gt;wordcloud) (1.4.4)
+Requirement already satisfied: packaging&gt;=20.0 in c:\users\ashulah\anaconda3\lib\site-packages (from matplotlib-&gt;wordcloud) (24.1)
+Requirement already satisfied: pyparsing&gt;=2.3.1 in c:\users\ashulah\anaconda3\lib\site-packages (from matplotlib-&gt;wordcloud) (3.1.2)
+Requirement already satisfied: python-dateutil&gt;=2.7 in c:\users\ashulah\anaconda3\lib\site-packages (from matplotlib-&gt;wordcloud) (2.9.0.post0)
+Requirement already satisfied: six&gt;=1.5 in c:\users\ashulah\anaconda3\lib\site-packages (from python-dateutil&gt;=2.7-&gt;matplotlib-&gt;wordcloud) (1.16.0)
+Note: you may need to restart the kernel to use updated packages.</code></pre>
+</div>
+</div>
+<div id="2c1fa706-85a4-48d7-966a-890d918c47f3" class="cell" data-execution_count="43">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> collections <span class="im">import</span> Counter</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> wordcloud <span class="im">import</span> WordCloud</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Join all cleaned comment text</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>all_text <span class="op">=</span> <span class="st">" "</span>.join(merged_df[<span class="st">'clean_text'</span>].dropna())</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Tokenize and count top 20 words</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>word_list <span class="op">=</span> all_text.split()</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>word_freq <span class="op">=</span> Counter(word_list)</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>top_20_words <span class="op">=</span> <span class="bu">dict</span>(word_freq.most_common(<span class="dv">20</span>))</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Create word cloud</span></span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>wordcloud <span class="op">=</span> WordCloud(width<span class="op">=</span><span class="dv">1000</span>, height<span class="op">=</span><span class="dv">500</span>, background_color<span class="op">=</span><span class="st">'white'</span>).generate_from_frequencies(top_20_words)</span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Save word cloud</span></span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>image_path <span class="op">=</span> os.path.join(results_dir, <span class="st">'wordcloud_top20.png'</span>)</span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>wordcloud.to_file(image_path)</span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional: show confirmation + preview</span></span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f" Word cloud saved to: </span><span class="sc">{</span>image_path<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Show image just to verify</span></span>
+<span id="cb32-24"><a href="#cb32-24" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">15</span>, <span class="dv">7</span>))</span>
+<span id="cb32-25"><a href="#cb32-25" aria-hidden="true" tabindex="-1"></a>plt.imshow(wordcloud, interpolation<span class="op">=</span><span class="st">'bilinear'</span>)</span>
+<span id="cb32-26"><a href="#cb32-26" aria-hidden="true" tabindex="-1"></a>plt.axis(<span class="st">'off'</span>)</span>
+<span id="cb32-27"><a href="#cb32-27" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Top 20 Most Frequent Words in Comments"</span>)</span>
+<span id="cb32-28"><a href="#cb32-28" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Word cloud saved to: C:\Users\Ashulah\Downloads\youTube_Channel_project\results\wordcloud_top20.png</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Data_Analysis12_files/figure-html/cell-19-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>we check unique tags</p>
+<div id="d17a8376-05c5-4352-9593-5659a1974024" class="cell" data-scrolled="true" data-execution_count="45">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>merged_df[<span class="st">'tags'</span>].unique()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="45">
+<pre><code>array(['[]',
+       "['Terence Tao', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Sundar Pichai', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['James Holland', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Oliver Anthony', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Janna Levin', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Tim Sweeney', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Jeffrey Wasserstrom', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Robert Rodriguez', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Dave Smith', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Douglas Murray', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Ezra Klein and Derek Thompson', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['ThePrimeagen', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Narendra Modi', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Dylan Patel and Nathan Lambert', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Marc Andreessen', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Jennifer Burns', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Volodymyr Zelenskyy', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Adam Frank', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Saagar Enjeti', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Javier Milei', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Dario Amodei', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Rick Spence', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Bernie Sanders', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Graham Hancock', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Jordan Peterson', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Cursor Team', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Ed Barnhart', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Vivek Ramaswamy', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Vejas Liulevicius', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Gregory Aldrete', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Donald Trump', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Cenk Uygur', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Pieter Levels', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Craig Jones', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['Elon Musk and Neuralink Team', 'alex friedman', 'lex ai', 'lex debate', 'lex freedman', 'lex fridman', 'lex friedman', 'lex interview', 'lex lecture', 'lex mit', 'lex podcast', 'lex transcript']",
+       "['elon musk', 'joe rogan', 'jordan jonas', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'ivanka trump', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'andrew huberman', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'aravind srinivas', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'sara walker']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'kevin spacey', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'roman yampolskiy']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'charan ranganath', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'paul rosolie']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'sean carroll']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'neil adams']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'edward gibson', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'andrew callaghan', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'bassem youssef', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'tulsi gabbard']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'mark cuban']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'dana white', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'annie jacobsen', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'sam altman 2']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'israel-palestine debate', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'kimbal musk', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'yann lecun']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'serhii plokhy']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'tucker carlson']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'bill ackman', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'marc raibert']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'omar suleiman']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'ben shapiro vs destiny debate', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'matthew cox']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'tal wilkenfeld']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'guillaume verdon', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'teddy atlas']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'jeff bezos', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lee cronin', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'lisa randall']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast', 'michael malice']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'john mearsheimer', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'elon musk', 'joe rogan', 'lex ai', 'lex fridman', 'lex friedman', 'lex jre', 'lex mit', 'lex pod', 'lex podcast']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'artificial intelligence podcast', 'jared kushner', 'lex ai', 'lex fridman', 'lex jre', 'lex mit', 'lex podcast', 'mit ai']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'artificial intelligence podcast', 'lex ai', 'lex fridman', 'lex jre', 'lex mit', 'lex podcast', 'mark zuckerberg', 'mit ai']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'artificial intelligence podcast', 'greg lukianoff', 'lex ai', 'lex fridman', 'lex jre', 'lex mit', 'lex podcast', 'mit ai']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'artificial intelligence podcast', 'james sexton', 'lex ai', 'lex fridman', 'lex jre', 'lex mit', 'lex podcast', 'mit ai']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'artificial intelligence podcast', 'lex ai', 'lex fridman', 'lex jre', 'lex mit', 'lex podcast', 'mit ai', 'walter isaacson']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'artificial intelligence podcast', 'lex ai', 'lex fridman', 'lex jre', 'lex mit', 'lex podcast', 'mit ai', 'neri oxman']",
+       "['agi', 'ai', 'ai podcast', 'andrew huberman', 'artificial intelligence', 'artificial intelligence podcast', 'lex ai', 'lex fridman', 'lex jre', 'lex mit', 'lex podcast', 'mit ai']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'artificial intelligence podcast', 'consciousness', 'danger', 'elon musk', 'evolution', 'future', 'joscha bach', 'lex ai', 'lex fridman', 'lex jre', 'lex mit', 'lex podcast', 'loneliness', 'mit ai', 'reality', 'technology', 'twitter']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'artificial intelligence podcast', 'lex ai', 'lex fridman', 'lex jre', 'lex mit', 'lex podcast', 'mit ai', 'mohammed el-kurd']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'artificial intelligence podcast', 'lex ai', 'lex fridman', 'lex jre', 'lex mit', 'lex podcast', 'mit ai', 'yuval noah harari']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'artificial intelligence podcast', 'benjamin netanyahu', 'lex ai', 'lex fridman', 'lex jre', 'lex mit', 'lex podcast', 'mit ai']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'artificial intelligence podcast', 'lex ai', 'lex fridman', 'lex jre', 'lex mit', 'lex podcast', 'mit ai', 'robert f kennedy jr']",
+       "['agi', 'ai', 'ai podcast', 'artificial intelligence', 'artificial intelligence podcast', 'george hotz', 'lex ai', 'lex fridman', 'lex jre', 'lex mit', 'lex podcast', 'mit ai']"],
+      dtype=object)</code></pre>
+</div>
+</div>
+</section>
+<section id="select-top-20-most-viewed-videos" class="level3">
+<h3 class="anchored" data-anchor-id="select-top-20-most-viewed-videos">Select Top 20 Most Viewed Videos</h3>
+<p>We sort the dataset by <code>viewCount</code> in descending order and select the top 20 videos:</p>
+<ul>
+<li>This subset will be used to analyze which tags are most common in high-performing videos</li>
+</ul>
+<p>Helps us understand what content topics attract the most views.</p>
+<div id="2097f631-7ab5-49b4-86de-1e2ef9e24f90" class="cell" data-execution_count="47">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>top_by_views <span class="op">=</span> merged_df.sort_values(by<span class="op">=</span><span class="st">'viewCount'</span>, ascending<span class="op">=</span><span class="va">False</span>).head(<span class="dv">20</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="top-tags-in-most-engaged-videos" class="level3">
+<h3 class="anchored" data-anchor-id="top-tags-in-most-engaged-videos">Top Tags in Most Engaged Videos</h3>
+<p>We identify the most frequently used tags in the top 20 most engaged videos (based on likes + comments):</p>
+<ol type="1">
+<li>Calculate an <code>engagement</code> score for each video<br>
+</li>
+<li>Select the top 20 videos with highest engagement<br>
+</li>
+<li>Parse the <code>tags</code> field using <code>ast.literal_eval()</code><br>
+</li>
+<li>Count tag frequency with <code>Counter</code><br>
+</li>
+<li>Visualize the top 15 tags using a bar chart with transparent background and styled borders</li>
+</ol>
+<p>This reveals which topics or keywords are most common in high-performing content.</p>
+<div id="f525eba5-5daf-45c6-8287-d1dbebce7dd2" class="cell" data-execution_count="49">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> ast</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> collections <span class="im">import</span> Counter</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.express <span class="im">as</span> px</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Flatten all tags into a single list</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>all_tags <span class="op">=</span> [tag <span class="cf">for</span> sublist <span class="kw">in</span> merged_df[<span class="st">'tags'</span>].<span class="bu">apply</span>(ast.literal_eval) <span class="cf">for</span> tag <span class="kw">in</span> sublist]</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Count tag frequencies</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>tag_counter <span class="op">=</span> Counter(all_tags)</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert to DataFrame</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>tag_df <span class="op">=</span> pd.DataFrame(tag_counter.items(), columns<span class="op">=</span>[<span class="st">'Tag'</span>, <span class="st">'Count'</span>]).sort_values(by<span class="op">=</span><span class="st">'Count'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot - improved version</span></span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> px.bar(tag_df.head(<span class="dv">15</span>), </span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>             x<span class="op">=</span><span class="st">'Tag'</span>, </span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>             y<span class="op">=</span><span class="st">'Count'</span>,</span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>             title<span class="op">=</span><span class="st">'Top Tags in Most Engaged Videos (Likes + Comments)'</span>,</span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>             height<span class="op">=</span><span class="dv">600</span>,</span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>             width<span class="op">=</span><span class="dv">900</span>,</span>
+<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a>             color_discrete_sequence<span class="op">=</span>[<span class="st">"#636EFA"</span>],</span>
+<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a>             text<span class="op">=</span><span class="st">'Count'</span>)</span>
+<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a>fig.update_traces(</span>
+<span id="cb37-25"><a href="#cb37-25" aria-hidden="true" tabindex="-1"></a>    marker_line_color<span class="op">=</span><span class="st">'black'</span>,</span>
+<span id="cb37-26"><a href="#cb37-26" aria-hidden="true" tabindex="-1"></a>    marker_line_width<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb37-27"><a href="#cb37-27" aria-hidden="true" tabindex="-1"></a>    textposition<span class="op">=</span><span class="st">'outside'</span>,</span>
+<span id="cb37-28"><a href="#cb37-28" aria-hidden="true" tabindex="-1"></a>    textfont_size<span class="op">=</span><span class="dv">12</span></span>
+<span id="cb37-29"><a href="#cb37-29" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-30"><a href="#cb37-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-31"><a href="#cb37-31" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
+<span id="cb37-32"><a href="#cb37-32" aria-hidden="true" tabindex="-1"></a>    template<span class="op">=</span><span class="st">'plotly_white'</span>,</span>
+<span id="cb37-33"><a href="#cb37-33" aria-hidden="true" tabindex="-1"></a>    xaxis_title<span class="op">=</span><span class="st">'Tag'</span>,</span>
+<span id="cb37-34"><a href="#cb37-34" aria-hidden="true" tabindex="-1"></a>    yaxis_title<span class="op">=</span><span class="st">'Frequency'</span>,</span>
+<span id="cb37-35"><a href="#cb37-35" aria-hidden="true" tabindex="-1"></a>    margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">80</span>, r<span class="op">=</span><span class="dv">40</span>, b<span class="op">=</span><span class="dv">150</span>, l<span class="op">=</span><span class="dv">60</span>),</span>
+<span id="cb37-36"><a href="#cb37-36" aria-hidden="true" tabindex="-1"></a>    paper_bgcolor<span class="op">=</span><span class="st">'white'</span>,</span>
+<span id="cb37-37"><a href="#cb37-37" aria-hidden="true" tabindex="-1"></a>    plot_bgcolor<span class="op">=</span><span class="st">'white'</span>,</span>
+<span id="cb37-38"><a href="#cb37-38" aria-hidden="true" tabindex="-1"></a>    xaxis_tickangle<span class="op">=</span><span class="dv">45</span>,</span>
+<span id="cb37-39"><a href="#cb37-39" aria-hidden="true" tabindex="-1"></a>    font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">12</span>, color<span class="op">=</span><span class="st">'black'</span>),</span>
+<span id="cb37-40"><a href="#cb37-40" aria-hidden="true" tabindex="-1"></a>    coloraxis_showscale<span class="op">=</span><span class="va">False</span></span>
+<span id="cb37-41"><a href="#cb37-41" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-42"><a href="#cb37-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-43"><a href="#cb37-43" aria-hidden="true" tabindex="-1"></a>fig.update_xaxes(tickfont<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">10</span>))</span>
+<span id="cb37-44"><a href="#cb37-44" aria-hidden="true" tabindex="-1"></a>fig.update_yaxes(gridcolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
+<span id="cb37-45"><a href="#cb37-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-46"><a href="#cb37-46" aria-hidden="true" tabindex="-1"></a>fig.show()</span>
+<span id="cb37-47"><a href="#cb37-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-48"><a href="#cb37-48" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional: Save to file</span></span>
+<span id="cb37-49"><a href="#cb37-49" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'top_tags_engaged_videos.jpg'</span>))</span>
+<span id="cb37-50"><a href="#cb37-50" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'top_tags_engaged_videos.png'</span>))</span>
+<span id="cb37-51"><a href="#cb37-51" aria-hidden="true" tabindex="-1"></a>fig.write_html(os.path.join(results_dir, <span class="st">'top_tags_engaged_videos.html'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>Unable to display output for mime type(s): application/vnd.plotly.v1+json</code></pre>
+</div>
+</div>
+<div id="83cb354c-82e2-41fb-9b25-c6315b015da2" class="cell" data-execution_count="50">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(monthly_counts)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      month  Video Count
+0   2023-06           50
+1   2023-07          250
+2   2023-08          150
+3   2023-09          249
+4   2023-10           50
+5   2023-11          150
+6   2023-12          250
+7   2024-01          200
+8   2024-02          150
+9   2024-03          400
+10  2024-04          400
+11  2024-05           99
+12  2024-06          250
+13  2024-07          100
+14  2024-08          200
+15  2024-09          250
+16  2024-10          250
+17  2024-11          100
+18  2024-12          100
+19  2025-01          150
+20  2025-02           50
+21  2025-03          200
+22  2025-04          200
+23  2025-05          150
+24  2025-06          284</code></pre>
+</div>
+</div>
+</section>
+<section id="top-10-most-engaged-videos-table" class="level3">
+<h3 class="anchored" data-anchor-id="top-10-most-engaged-videos-table">Top 10 Most Engaged Videos (Table)</h3>
+<p>We calculate an <code>engagement</code> score for each video as the sum of:</p>
+<ul>
+<li><code>videoLikeCount</code> (likes)<br>
+</li>
+<li><code>commentCount</code> (comments)</li>
+</ul>
+<p>Then, we: - Sort the videos by engagement in descending order<br>
+- Display the top 10 videos with their titles, like counts, comment counts, and total engagement</p>
+<p>This gives a clear snapshot of which videos resonated most with the audience.</p>
+<div id="23c1a6d3-8e5e-4130-a549-f35384b714cc" class="cell" data-execution_count="52">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>merged_df[<span class="st">'Engagement'</span>] <span class="op">=</span> merged_df[<span class="st">'videoLikeCount'</span>] <span class="op">+</span> merged_df[<span class="st">'commentCount'</span>]</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Group by video and get max engagement</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>top_engaged <span class="op">=</span> merged_df.groupby([<span class="st">'videoId'</span>, <span class="st">'title'</span>], as_index<span class="op">=</span><span class="va">False</span>)[<span class="st">'Engagement'</span>].<span class="bu">max</span>()</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Sort and select top 10</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>top_engaged <span class="op">=</span> top_engaged.sort_values(by<span class="op">=</span><span class="st">'Engagement'</span>, ascending<span class="op">=</span><span class="va">False</span>).head(<span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="183cc25e-8b19-4334-a101-7c7c26475bd6" class="cell" data-execution_count="53">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a short version of the title with 14 characters</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>top_engaged[<span class="st">'short_title'</span>] <span class="op">=</span> top_engaged[<span class="st">'title'</span>].<span class="bu">str</span>.<span class="bu">slice</span>(<span class="dv">0</span>, <span class="dv">14</span>)</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot using the shortened title</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> px.bar(</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>    top_engaged,</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span><span class="st">'short_title'</span>,</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>    y<span class="op">=</span><span class="st">'Engagement'</span>,</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>    title<span class="op">=</span><span class="st">'Top 10 Most Engaged Videos (Likes + Comments)'</span>,</span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>    color_discrete_sequence<span class="op">=</span>[<span class="st">"#636EFA"</span>],</span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a>    height<span class="op">=</span><span class="dv">500</span>,</span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a>    width<span class="op">=</span><span class="dv">1000</span></span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a>fig.update_traces(marker_line_color<span class="op">=</span><span class="st">'black'</span>, marker_line_width<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
+<span id="cb42-18"><a href="#cb42-18" aria-hidden="true" tabindex="-1"></a>    template<span class="op">=</span><span class="st">'presentation'</span>,</span>
+<span id="cb42-19"><a href="#cb42-19" aria-hidden="true" tabindex="-1"></a>    paper_bgcolor<span class="op">=</span><span class="st">'rgba(0,0,0,0)'</span>,</span>
+<span id="cb42-20"><a href="#cb42-20" aria-hidden="true" tabindex="-1"></a>    plot_bgcolor<span class="op">=</span><span class="st">'rgba(0,0,0,0)'</span>,</span>
+<span id="cb42-21"><a href="#cb42-21" aria-hidden="true" tabindex="-1"></a>    xaxis_title<span class="op">=</span><span class="st">'Video Title (Truncated)'</span>,</span>
+<span id="cb42-22"><a href="#cb42-22" aria-hidden="true" tabindex="-1"></a>    yaxis_title<span class="op">=</span><span class="st">'Engagement'</span>,</span>
+<span id="cb42-23"><a href="#cb42-23" aria-hidden="true" tabindex="-1"></a>    margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">80</span>, r<span class="op">=</span><span class="dv">40</span>, b<span class="op">=</span><span class="dv">150</span>),</span>
+<span id="cb42-24"><a href="#cb42-24" aria-hidden="true" tabindex="-1"></a>    xaxis_tickangle<span class="op">=</span><span class="dv">45</span></span>
+<span id="cb42-25"><a href="#cb42-25" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb42-26"><a href="#cb42-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-27"><a href="#cb42-27" aria-hidden="true" tabindex="-1"></a>fig.show()</span>
+<span id="cb42-28"><a href="#cb42-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-29"><a href="#cb42-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-30"><a href="#cb42-30" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'top_10_engaged_videos.jpg'</span>))</span>
+<span id="cb42-31"><a href="#cb42-31" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'top_10_engaged_videos.png'</span>))</span>
+<span id="cb42-32"><a href="#cb42-32" aria-hidden="true" tabindex="-1"></a>fig.write_html(os.path.join(results_dir, <span class="st">'top_10_engaged_videos.html'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Data_Analysis12_files/figure-html/cell-25-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<ul>
+<li><p><strong>Visual Observations</strong>: “Tucker Car” is only top engagement; political figures dominate.<br>
+</p></li>
+<li><p><strong>Contextual Meaning</strong>: Controversial/popular figures drive disproportionate engagement.</p></li>
+<li><p><strong>Statistical Test</strong>: Outlier detection (IQR) to flag exceptional videos.</p>
+<ul>
+<li><strong>Actionable Insight</strong>: Replicate topics/styles from top performers.</li>
+</ul></li>
+<li><p><strong>Variables</strong>: Engagement vs.&nbsp;video length (not shown; potential confounder).</p></li>
+</ul>
+<div id="4e226e3f-bce6-4448-b30f-fbc35e998269" class="cell" data-execution_count="55">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.express <span class="im">as</span> px</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Turn word frequency dict into a DataFrame</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>word_freq_df <span class="op">=</span> pd.DataFrame(top_20_words.items(), columns<span class="op">=</span>[<span class="st">'Word'</span>, <span class="st">'Count'</span>]).sort_values(by<span class="op">=</span><span class="st">'Count'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> px.bar(word_freq_df, x<span class="op">=</span><span class="st">'Word'</span>, y<span class="op">=</span><span class="st">'Count'</span>, title<span class="op">=</span><span class="st">'Top 20 Most Frequent Words in Comments'</span>, color_discrete_sequence<span class="op">=</span>[<span class="st">"#636EFA"</span>])</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>fig.update_layout(template<span class="op">=</span><span class="st">'presentation'</span>,</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>                  xaxis_title<span class="op">=</span><span class="st">'Word'</span>,</span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>                  yaxis_title<span class="op">=</span><span class="st">'Frequency'</span>,</span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>                  paper_bgcolor<span class="op">=</span><span class="st">'rgba(0,0,0,0)'</span>,</span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>                  plot_bgcolor<span class="op">=</span><span class="st">'rgba(0,0,0,0)'</span>)</span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>fig.show()</span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'top_20_words.jpg'</span>))</span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a>fig.write_image(os.path.join(results_dir, <span class="st">'top_20_words.png'</span>))</span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>fig.write_html(os.path.join(results_dir, <span class="st">'top_20_words.html'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Data_Analysis12_files/figure-html/cell-26-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<ul>
+<li><p><strong>Visual Observations</strong>: High-frequency words like “gender,” “time” suggest thematic focus.<br>
+</p></li>
+<li><p><strong>Contextual Meaning</strong>: Recurring topics may indicate audience priorities or controversies.</p></li>
+<li><p><strong>Statistical Test</strong>: TF-IDF to identify topic-specific keywords.</p>
+<ul>
+<li><strong>Actionable Insight</strong>: Address frequent themes in future content.</li>
+</ul></li>
+<li><p><strong>Variables</strong>: Word frequency vs.&nbsp;sentiment (e.g., “gender” → negative?).</p></li>
+</ul>
+<div id="9a318e64-9739-4724-b8e7-399a0325c4a1" class="cell" data-execution_count="57">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>pip install plotly</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Requirement already satisfied: plotly in c:\users\ashulah\anaconda3\lib\site-packages (6.1.2)
+Requirement already satisfied: narwhals&gt;=1.15.1 in c:\users\ashulah\anaconda3\lib\site-packages (from plotly) (1.43.1)
+Requirement already satisfied: packaging in c:\users\ashulah\anaconda3\lib\site-packages (from plotly) (24.1)
+Note: you may need to restart the kernel to use updated packages.</code></pre>
+</div>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -2,7 +2,7 @@
 title: Data Analysis
 subtitle: Data Exploratory an Data Analysis (EDA)
 author:
-  - name: Ashura , Nadia, Aline
+  - name: Ashura Ishimwe
     affiliation: Junior Data Analyst
 date: "2025-06-25"
 format: 
